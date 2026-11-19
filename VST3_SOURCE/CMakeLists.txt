@@ -21,6 +21,7 @@ juce_add_plugin(Meowcillator
     NEEDS_MIDI_OUTPUT TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     COPY_PLUGIN_AFTER_BUILD FALSE)
+juce_generate_juce_header(Meowcillator)
 juce_add_binary_data(MeowAssets SOURCES Assets/cat.png Assets/rat_wear.png)
 target_sources(Meowcillator PRIVATE Source/PluginProcessor.cpp Source/PluginEditor.cpp)
 target_include_directories(Meowcillator PRIVATE Source)
