@@ -41,6 +41,7 @@ public:
   void beginMidiLearn(const juce::String& id, bool relative=false);
   void forgetMidiMapping(const juce::String& id);
   void clearMidiMappings();
+  void cancelMidiLearn();
   juce::var midiMappingState() const;
   int pendingMidiLearn() const { return learnTarget.load(std::memory_order_acquire); }
   std::atomic<unsigned> midiMapRevision{0};
@@ -59,6 +60,12 @@ public:
   // Five playable on-screen keyboard keys and external MIDI both use the same native engine.
   std::array<std::atomic<bool>,128> uiKeyboardNotes{};
   std::array<bool,128> previousUiKeyboardNotes{};
+  // Incoming MIDI monitor for DAW routing diagnosis. GUI reads atomics only.
+  std::atomic<unsigned> incomingMidiCount{0};
+  std::atomic<int> incomingMidiType{0}; // 1=NOTE, 2=CC, 3=PITCH
+  std::atomic<int> incomingMidiChannel{0};
+  std::atomic<int> incomingMidiNumber{0};
+  std::atomic<int> incomingMidiValue{0};
   std::atomic<int> midiVisualNote{-1};
   std::atomic<bool> midiVisualActive{false};
   std::atomic<float> midiVisualY{.52f};

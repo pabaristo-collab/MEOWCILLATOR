@@ -407,7 +407,17 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
  auto drumBus=getBusBuffer(buffer,false,1);
  // Map hardware CC/pitch wheel before DSP reads parameters for this block.
  // This path is allocation-free and does not block on the WebView renderer.
- for(const auto metadata:midi)handleMidiMapping(metadata.getMessage());
+ for(const auto metadata:midi) {
+  const auto& msg=metadata.getMessage();
+  if (msg.isNoteOn() || msg.isController() || msg.isPitchWheel()) {
+    incomingMidiChannel.store(msg.getChannel(),std::memory_order_relaxed);
+    incomingMidiType.store(msg.isNoteOn()?1:(msg.isController()?2:3),std::memory_order_relaxed);
+    incomingMidiNumber.store(msg.isNoteOn()?msg.getNoteNumber():(msg.isController()?msg.getControllerNumber():0),std::memory_order_relaxed);
+    incomingMidiValue.store(msg.isNoteOn()?juce::roundToInt(msg.getFloatVelocity()*127.f):(msg.isController()?msg.getControllerValue():msg.getPitchWheelValue()),std::memory_order_relaxed);
+    incomingMidiCount.fetch_add(1,std::memory_order_release);
+  }
+  handleMidiMapping(msg);
+ }
  auto v=[&](const char* id){return parameterForAudio(id);};
  int patch=program.load(),groove=juce::jlimit(0,10,int(v("groove"))),kit=int(v("kit")),key=int(v("key")),oct=int(v("octave"))-2,scale=int(v("scale"));
  bool arp=v("arp")>.5f,hold=v("hold")>.5f;
@@ -747,3 +757,5 @@ void MeowcillatorProcessor::setStateInformation(const void* d,int n){
 }
 juce::AudioProcessorEditor* MeowcillatorProcessor::createEditor(){return new MeowcillatorEditor(*this);}
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){return new MeowcillatorProcessor();}
+
+void MeowcillatorProcessor::cancelMidiLearn(){ learnTarget.store(-1,std::memory_order_release); midiMapRevision.fetch_add(1,std::memory_order_release); }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>MEOWCILLATOR 0.9.19 VST3 — by pablo aristo</title>
+<title>MEOWCILLATOR 0.9.23 RESTORED — by pablo aristo</title>
 <style>
 :root{--paper:#f8f8f6;--pink:#d88dbb;--pink2:#f0d4e4;--muted:#c9c3c8;--stroke:#77727a;--bg:#09090d;--radius:14px;--accent:#d88dbb;--accent-soft:#f0d4e4;--motion-scale:1}
 *{box-sizing:border-box}html{background:#08080a}body{margin:0;padding:18px 10px 30px;background:radial-gradient(ellipse at 50% 18%,#17171b 0,#0e0e11 55%,#040406 95%);color:var(--paper);font:14px/1.25 Arial,Helvetica,sans-serif}
@@ -262,6 +262,9 @@ body.meow-native-fit .meow-fit-indicator{display:none!important}
 .meow-midi-menu button:hover{background:#444;border-color:#fff}
 .meow-midi-status{position:fixed;z-index:999998;bottom:8px;left:8px;padding:5px 9px;background:#090909dd;color:#fff;border:1px solid #666;border-radius:5px;font:bold 10px/1.3 monospace;pointer-events:none;opacity:.55;max-width:70vw}
 .meow-midi-status.show{opacity:1;border-color:#fff}
+
+.meow-midi-monitor{font:10px/1.25 'Courier New',monospace;letter-spacing:.15px;color:#eeeeee;border:1px solid #4a4a4a;border-radius:4px;padding:4px 6px;margin:4px 0;white-space:normal;background:#090909}
+.meow-midi-monitor.received{color:#ffffff;border-color:#d7d7d7;background:#252525}
 </style>
 <style id="meow-0916-landscape">
 /* MEOWCILLATOR 0.9.18 — curated 20:18 LANDSCAPE PANEL.
@@ -629,6 +632,56 @@ body.meow-native-fit .stage .right>.filter-controls .filterpair .controlbox>labe
 body.meow-native-fit .stage .right>.filter-controls .filterpair .controlbox>output{font-size:13px!important}
 body.meow-native-fit .stage .right>.fx-controls .fxrow{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}
 </style>
+
+<style id="meow-0920-live-play">
+/* 0.9.20 · Live Play: five pads, full-size HOLD, independent PAD FX */
+body.meow-native-fit .stage .left>.controls:nth-child(2) .sectionhead{
+ display:flex!important;gap:6px!important;justify-content:flex-start!important;align-items:center!important;
+}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .sectionhead>.taglabel{margin-right:auto!important;}
+body.meow-native-fit #arp,body.meow-native-fit #hold{
+ display:inline-flex!important;align-items:center;justify-content:center;
+ font:900 14px/1.2 Arial,sans-serif!important;letter-spacing:.3px!important;
+ border:2px solid #ddd!important;border-radius:7px!important;
+ min-width:90px!important;min-height:35px!important;padding:5px 9px!important;
+ color:#fff!important;background:#202020!important;white-space:nowrap!important;
+}
+body.meow-native-fit #arp.on,body.meow-native-fit #hold.on,
+body.meow-native-fit #arp.active,body.meow-native-fit #hold.active{background:#fff!important;color:#090909!important;}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type{display:block!important;margin-top:7px!important;}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type>div{width:100%!important;}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type select{width:100%!important;}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .dialgrid{margin-top:2px!important;}
+body.meow-native-fit .meow-pad-deck{display:grid!important;grid-template-columns:1fr auto!important;gap:7px 15px!important;align-items:center!important;}
+body.meow-native-fit .meow-pad-head{grid-column:1 / -1!important;}
+body.meow-native-fit .meow-pad-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:9px!important;align-items:stretch!important;min-width:0!important;}
+body.meow-native-fit .meow-drum-trigger{min-height:58px!important;}
+body.meow-native-fit .meow-drum-trigger span{font-size:13px!important;}
+body.meow-native-fit .meow-drum-trigger small{font-size:12px!important;}
+body.meow-native-fit .pad-fx-controls{display:flex;align-items:center;gap:15px;border:1px solid #777;border-radius:9px;padding:5px 12px;min-width:294px;}
+body.meow-native-fit .pad-fx-controls>strong{display:block;font:900 16px/1 Arial,sans-serif;white-space:nowrap;}
+body.meow-native-fit .pad-fx-controls>strong span{font:10px/1.3 Arial,sans-serif;display:block;color:#c8c8c8;margin-top:4px;}
+body.meow-native-fit .pad-fx-knobs{display:flex!important;align-items:center;justify-content:center;gap:14px;}
+body.meow-native-fit .pad-fx-knobs .controlbox{display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:68px;}
+body.meow-native-fit .pad-fx-knobs label{font:bold 11px Arial,sans-serif;order:1;margin-top:2px;}
+body.meow-native-fit .pad-fx-knobs .dial{width:49px!important;height:49px!important;order:0;margin:0 auto!important;}
+body.meow-native-fit .pad-fx-knobs output{font-size:12px!important;order:2;}
+body.meow-native-fit .midi-keyboard-panel{justify-content:flex-start!important;padding:4px 12px!important;gap:1px!important;}
+body.meow-native-fit .midi-keyboard-panel .sectionhead{min-height:18px!important;margin:0!important;}
+body.meow-native-fit .midi-keyboard-panel .midi-key-display{padding:2px!important;font-size:11px!important;}
+body.meow-native-fit .midi-keyboard-panel .midi-key-caption,body.meow-native-fit .midi-keyboard-panel .midi-key-indicator{display:none!important;}
+body.meow-native-fit #meowVirtualKeyboard button{height:27px!important;}
+body.meow-native-fit .midi-keyboard-panel .taglabel{font-size:15px!important;padding:3px 9px!important;}
+body.meow-native-fit .midi-keyboard-panel .mini{font-size:10px!important;}
+body.meow-native-fit #meowVirtualKeyboard{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;margin:2px 0 1px;}
+body.meow-native-fit #meowVirtualKeyboard button{display:block;appearance:none;cursor:pointer;background:#eee;border:1px solid #999;border-radius:3px;height:32px;padding:3px 0;color:#111;font:bold 10px Arial,sans-serif;touch-action:none;user-select:none;}
+body.meow-native-fit #meowVirtualKeyboard button.black{background:#555;color:#fff;}
+body.meow-native-fit #meowVirtualKeyboard button.down{background:#adf7fd;color:#090909;box-shadow:0 0 8px #fff;}
+body.meow-native-fit .midi-key-caption{font-size:10px!important;}
+body.meow-native-fit .midi-key-display{font-size:12px!important;}
+/* Preserve bigger typography in the wider layout; scrollbars remain disabled. */
+body.meow-native-fit .toprow .screen-name{font-size:25px!important;}
+</style>
 </head>
 <body>
 <main class="shell" aria-label="MEOWCILLATOR synthesizer">
@@ -664,15 +717,16 @@ body.meow-native-fit .stage .right>.fx-controls .fxrow{grid-template-columns:rep
   <section class="module controls midi-keyboard-panel" aria-label="Native MIDI keyboard control">
 <div class="sectionhead"><div class="taglabel">MIDI / XY</div><span class="mini">NATIVE INPUT</span></div>
 <div class="midi-key-display" id="meowMidiNoteStatus" aria-live="off">KEYBOARD READY · CH 1</div>
-<div class="midi-key-caption">KEYS C2–C6 → XY PITCH · GATE<br>CC74 → Y · MIDI LEARN AVAILABLE</div>
+<div class="meow-midi-monitor" id="meowMidiMonitor" aria-live="off">MIDI IN: NO DATA · ENABLE YOUR CONTROLLER IN REAPER</div>
+<div class="midi-key-caption">MIDI NOTES 0–127 → SYNTH · GATE<br>CC74 → Y · MIDI LEARN AVAILABLE</div>
 <div class="midi-key-indicator" aria-hidden="true"><span id="meowMidiKeyLight"></span></div>
 </section>
  </div>
 </div>
-<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">0.9.19 · GROOVE CONTROL</div></div>
+<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">0.9.20 · LIVE PLAY</div></div>
  <div class="drumrow"><div><label>RHYTHM STYLE · 11</label><div class="stepselect"><button id="groovePrev" aria-label="Previous rhythm">‹</button><select id="grooveSelect" aria-label="Rhythm style"></select><button id="grooveNext" aria-label="Next rhythm">›</button></div></div><div><label>DRUM SOUND</label><div class="stepselect"><button id="drumPrev" aria-label="Previous drum sound">‹</button><select id="drumPack" aria-label="Drum sound"></select><button id="drumNext" aria-label="Next drum sound">›</button></div></div><div class="bpmwrap"><label>BPM · MASTER</label><input class="bpm-number" type="number" inputmode="numeric" id="bpmText" min="40" max="220" value="132" step="1" aria-label="Master BPM"><div hidden><button id="minus">−</button><button id="plus">+</button></div></div><div class="microdial"><label>DRUM LVL</label><input id="drumVol" type="range" min="0" max="100" value="60"></div><div class="playwrap"><label>TRANSPORT</label><button class="play" id="play">▶ PLAY</button></div></div>
- <div class="meow-pad-deck" id="nativeDrumDeck" aria-label="Eight playable MIDI drum pads">
-  <div class="meow-pad-head"><strong>DRUM PADS · 8 VOICES</strong><small>CH 10 · TOUCH / MIDI LEARN</small>
+ <div class="meow-pad-deck" id="nativeDrumDeck" aria-label="Five playable MIDI drum pads">
+  <div class="meow-pad-head"><strong>DRUM PADS · 5 VOICES</strong><small>CH 10 · TOUCH / MIDI LEARN</small>
   <label class="meow-split-label"><input type="checkbox" id="meowSplitOut"> SPLIT AUDIO · OUT 3/4</label></div>
   <div class="meow-pad-grid" id="nativeDrumGrid">
    <button class="meow-drum-trigger" data-drum-pad="0" type="button"><span>KICK</span><small>36</small></button>
@@ -680,9 +734,13 @@ body.meow-native-fit .stage .right>.fx-controls .fxrow{grid-template-columns:rep
    <button class="meow-drum-trigger" data-drum-pad="2" type="button"><span>CLAP</span><small>39</small></button>
    <button class="meow-drum-trigger" data-drum-pad="3" type="button"><span>CLOSED HH</span><small>42</small></button>
    <button class="meow-drum-trigger" data-drum-pad="4" type="button"><span>OPEN HH</span><small>46</small></button>
-   <button class="meow-drum-trigger" data-drum-pad="5" type="button"><span>LOW TOM</span><small>45</small></button>
-   <button class="meow-drum-trigger" data-drum-pad="6" type="button"><span>HIGH TOM</span><small>50</small></button>
-   <button class="meow-drum-trigger" data-drum-pad="7" type="button"><span>CRASH</span><small>49</small></button>
+  </div>
+  <div class="pad-fx-controls" aria-label="Effects applied only to manually played pads">
+    <strong>PAD FX <span>ONLY LIVE PADS · RHYTHMS DRY</span></strong>
+    <div class="pad-fx-knobs">
+      <div class="controlbox"><label for="padReverb">REVERB</label><input id="padReverb" type="range" min="0" max="100" value="16"></div>
+      <div class="controlbox"><label for="padCrunch">CRUNCH</label><input id="padCrunch" type="range" min="0" max="100" value="12"></div>
+    </div>
   </div>
  </div>
  
@@ -855,7 +913,7 @@ if(!backend){return;} // The original browser standalone demo remains independen
 window.meowNativeMode=true;
 const emit=(type,extra={})=>backend.emitEvent('meow',Object.assign({type},extra));
 const ui=id=>document.getElementById(id);
-const idMap={osc:'osc',glide:'glide',cutoff:'cutoff',resonance:'resonance',fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',gate:'gate',padMotion:'motionPower',drumVol:'drums',bpmText:'bpm',key:'key',scale:'scale',rate:'rate',arptype:'arpType',grooveSelect:'groove',drumPack:'kit',effect:'effect',themeSelect:'color',motionStyle:'motion'};
+const idMap={osc:'osc',glide:'glide',cutoff:'cutoff',resonance:'resonance',fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',padReverb:'padReverb',padCrunch:'padCrunch',gate:'gate',padMotion:'motionPower',drumVol:'drums',bpmText:'bpm',key:'key',scale:'scale',rate:'rate',arptype:'arpType',grooveSelect:'groove',drumPack:'kit',effect:'effect',themeSelect:'color',motionStyle:'motion'};
 const indexMap={
  key:null,scale:['minor','major','natural','blues','chromatic'],
  rate:['4','2','1','.5'],
@@ -863,7 +921,8 @@ const indexMap={
  effect:['off','delay','crush','sat','reverb'],
  themeSelect:['mono','orange','blush','ice','acid'],
  motionStyle:['liquid','pulse','spectrum','glitch']};
-const pct=new Set(['osc','glide','resonance','fxmix','drive','feedback','gate','padMotion','drumVol']);
+const pct=new Set(['osc','glide','resonance','fxmix','drive','feedback','gate','padMotion','drumVol','padReverb','padCrunch']);
+const nativeInverseIdMap=Object.fromEntries(Object.entries(idMap).map(([k,v])=>[v,k]));
 let receiving=false;
 const updateNative=(id)=>{
  if(receiving)return;
@@ -980,7 +1039,7 @@ document.querySelectorAll('.meow-drum-trigger').forEach(button=>{
 if(splitToggle)splitToggle.addEventListener('change',()=>emit('parameter',{id:'splitOut',value:splitToggle.checked?1:0}));
 const midiLearnTargets={
  osc:'osc',drumVol:'drums',bpmText:'bpm',glide:'glide',cutoff:'cutoff',resonance:'resonance',
- fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',gate:'gate',key:'key',scale:'scale',
+ fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',padReverb:'padReverb',padCrunch:'padCrunch',gate:'gate',key:'key',scale:'scale',
  grooveSelect:'groove',drumPack:'kit',effect:'effect',rate:'rate',rateDial:'rate',
  arptype:'arpType',themeSelect:'color',motionStyle:'motion',padMotion:'motionPower',
  arp:'arp',hold:'hold',preset:'preset',play:'play',
@@ -992,6 +1051,11 @@ const midiMenu=document.createElement('div');midiMenu.className='meow-midi-menu'
 const midiStatus=document.createElement('div');midiStatus.className='meow-midi-status';
 midiStatus.textContent='';
 document.body.append(midiMenu,midiStatus);
+const midiCancel=document.createElement('button');
+midiCancel.type='button';midiCancel.textContent='CANCEL MIDI LEARN';
+midiCancel.style.cssText='position:fixed;z-index:999999;bottom:10px;right:84px;padding:6px 9px;font:10px monospace;color:#fff;background:#181818;border:1px solid #aaa;border-radius:4px;display:none;cursor:pointer';
+midiCancel.onclick=()=>{emit('midiCancel');midiCancel.style.display='none';};
+document.body.append(midiCancel);
 function statusMidi(text){midiStatus.textContent=text;midiStatus.classList.add('show');}
 function midiName(target){return String(target).replace(/([a-z])([A-Z])/g,'$1 $2').toUpperCase()}
 function menuAt(x,y,items){
@@ -1069,7 +1133,18 @@ ui('midi').onclick=()=>{
    }
    nativeGlowRaf=any?requestAnimationFrame(paintNativeHits):0;
  }
- backend.addEventListener('meowFrame',frame=>{
+ let previousMidiInputCount=0;
+backend.addEventListener('meowFrame',frame=>{
+ const count=Number(frame?.midiCount??0);
+ if(count!==previousMidiInputCount){
+   previousMidiInputCount=count;
+   const monitor=ui('meowMidiMonitor');
+   if(monitor){
+     const type=Number(frame?.midiType??0),kind=type===1?'NOTE':type===2?'CC':'BEND';
+     monitor.classList.add('received');
+     monitor.textContent='MIDI IN ✓ CH '+Number(frame?.midiChannel??0)+' · '+kind+' '+Number(frame?.midiNumber??0)+' · VALUE '+Number(frame?.midiValue??0);
+   }
+ }
   window.meowNativeFrame=frame;
    if(frame && Number.isFinite(frame.step))step=frame.step;
    // Each count increases only when JUCE actually triggers that instrument.
@@ -1096,27 +1171,39 @@ ui('midi').onclick=()=>{
 });
 backend.addEventListener('meowState',state=>{
  if(!state)return;
- midiMappings=state.midiMappings||{};
+ if(typeof state.playing==='boolean'){
+   const playButton=ui('play');
+   if(playButton)playButton.textContent=state.playing?'■ STOP':'▶ PLAY';
+   // Keep original front-end transport in agreement with native engine; don't emit.
+   transport=state.playing;
+ }
+ if(state.midiMappings)midiMappings=state.midiMappings;
  if(state.midiLearning!==undefined){
   if(midiLearning && !state.midiLearning){
    const label=midiMappings[midiLearning];
    if(label)statusMidi(midiName(midiLearning)+' ← '+label);
   }
   midiLearning=state.midiLearning||'';
+  midiCancel.style.display=midiLearning?'block':'none';
  }
  receiving=true;
  if(splitToggle)splitToggle.checked=Number(state.parameters?.splitOut||0)>0;
- const inv=Object.fromEntries(Object.entries(idMap).map(([k,v])=>[v,k]));
  for(const [name,value] of Object.entries(state.parameters||{})){
-   const id=inv[name],el=id&&ui(id);if(!el)continue;
-   let v=Number(value);
+   const id=nativeInverseIdMap[name],el=id&&ui(id);if(!el)continue;
+   let v=Number(value),changed=false;
    if(pct.has(id))v*=100;
-   if(indexMap[id])el.value=indexMap[id][Math.round(v)]||indexMap[id][0];
-   else if(el.tagName==='SELECT')el.selectedIndex=Math.round(v);
-   else el.value=String(v);
-   el.dispatchEvent(new Event('input'));
+   if(indexMap[id]){
+      const desired=indexMap[id][Math.round(v)]||indexMap[id][0];
+      if(el.value!==desired){el.value=desired;changed=true;}
+   }else if(el.tagName==='SELECT'){
+      const index=Math.round(v);
+      if(el.selectedIndex!==index){el.selectedIndex=index;changed=true;}
+   }else if(Number.isFinite(v) && Math.abs(Number(el.value)-v)>.001){
+      el.value=String(v);changed=true;
+   }
+   // Don't dispatch 28 synthetic events on every MIDI CC tick. Update changed controls only.
+   if(changed)el.dispatchEvent(new Event('input'));
  }
- // The UI emits the above changes back to JUCE to keep controls visually up-to-date.
  ui('preset').value=String(state.preset||0);
  const oct=Number(state.parameters?.octave??2)-2;
  document.querySelectorAll('#octs button').forEach((b,i)=>b.classList.toggle('active',i===oct+2));
@@ -1328,7 +1415,11 @@ setTimeout(()=>emit('ready'),150);
   grd.addColorStop(0,'rgba(255,255,255,.93)');grd.addColorStop(.18,color(.85*motion));grd.addColorStop(1,color(0));c.fillStyle=grd;c.beginPath();c.arc(x,y,outer*4,0,2*Math.PI);c.fill();
  }
  let lastDisplay=0;
- function frame(t){requestAnimationFrame(frame);if(!w||!h)return;
+ let lastNativePaint=0;
+ function frame(t){requestAnimationFrame(frame);
+  if(window.meowNativeMode && t-lastNativePaint<32)return;
+  lastNativePaint=t;
+  if(!w||!h)return;
   const dt=Math.min(.07,Math.max(.006,(t-last)/1000||.016));last=t;
   if(window.meowNativeFrame){const nf=window.meowNativeFrame;for(let i=0;i<fft.length;i++)fft[i]=nf.fft?.[i]??0;for(let i=0;i<timeDomain.length;i++)timeDomain[i]=nf.wave?.[i%256]??128;}else if(analyser){analyser.getByteFrequencyData(fft);analyser.getByteTimeDomainData(timeDomain)}else {fft.fill(0);timeDomain.fill(128)}
   let rms=0;for(let i=0;i<timeDomain.length;i++){const a=(timeDomain[i]-128)/128;rms+=a*a}rms=Math.sqrt(rms/timeDomain.length);
@@ -1457,6 +1548,41 @@ setTimeout(()=>emit('ready'),150);
 })();
 </script>
 
+
+<script id="meow-0920-live-play-js">
+(()=>{
+ const backend=window.__JUCE__?.backend;
+ if(!backend && window.__MEOW_FIT_PREVIEW!==true)return;
+ const harp=document.querySelector('.stage .left>.controls:nth-child(2)');
+ const head=harp?.querySelector('.sectionhead'),hold=document.getElementById('hold');
+ if(head&&hold){head.appendChild(hold);hold.title='HOLD sustains notes. Combine freely with ARP.';}
+ const panel=document.querySelector('.midi-keyboard-panel');
+ if(panel){
+  const keybed=document.createElement('div'); keybed.id='meowVirtualKeyboard';
+  keybed.setAttribute('aria-label','One-octave native MIDI keyboard · test sound without external hardware');
+  const names=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const pressed=new Set();
+  function emit(note,down){
+   if(backend)backend.emitEvent('meow',{type:'virtualNote',note,down});
+   else window.meowVirtualKeyTest={note,down};
+  }
+  function off(note,el){if(pressed.delete(note)){emit(note,false);}el?.classList.remove('down');}
+  names.forEach((name,i)=>{
+   const note=60+i;
+   const b=document.createElement('button');b.type='button';b.textContent=name;b.dataset.note=note;
+   if(name.includes('#'))b.classList.add('black');
+   b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);if(!pressed.has(note)){pressed.add(note);emit(note,true);}b.classList.add('down');});
+   for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>off(note,b));
+   keybed.appendChild(b);
+  });
+  window.addEventListener('blur',()=>{for(const note of [...pressed])off(note,keybed.querySelector(`[data-note="${note}"]`));});
+  const marker=panel.querySelector('.midi-key-caption');
+  if(marker)marker.textContent='TEST KEYS ABOVE · HARDWARE MIDI: ARM + MONITOR IN REAPER';
+  panel.insertBefore(keybed,marker||null);
+ }
+ // Do not repurpose existing original pattern MIDI note assignments.
+})();
+</script>
 </body></html>
 
 <!-- MEOWCILLATOR 0.9.5: BLACK CAT default and internal synthesized cat pads -->
