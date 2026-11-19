@@ -100,8 +100,22 @@ struct DrumSynth {
   hEnv*=1.f-std::min(1.f,dt/decayH[k]);
   oEnv*=1.f-std::min(1.f,dt/decayO[k]);
   kSweep*=1.f-std::min(1.f,dt/(k==2?.026f:k==3?.068f:.046f));
-  static constexpr float kitGain[4]={1.f,.60f,.92f,.90f};
-  return std::clamp((kickOut+snareOut+hatOut+clapOut+tomLow+tomHigh+crashOut)*kitGain[k],-.86f,.86f);
+  // Independent per-instrument loudness trims. Calibrated from measured
+  // single-hit 44.1 kHz RMS, with musical headroom for overlapping notes.
+  // These values do not alter velocity/accent or any rhythm steps.
+  static constexpr float level[4][8]={
+    // kick, snare, clap, closed hat, open hat, low tom, high tom, crash
+    { .94f, 1.15f, 1.70f, 2.55f, 2.35f, .88f, .88f, 1.02f },
+    { .50f,  .94f, 3.97f, 1.86f, 2.20f,  .73f,  .72f,  .94f },
+    { .92f,  .75f, 1.80f, 1.32f, 1.43f,  .95f,  .96f,  .78f },
+    { .87f, 3.05f, 6.45f, 6.50f, 6.50f,  .97f,  .98f,  .86f }
+  };
+  const float closedShare=hEnv/(hEnv+oEnv+1.e-7f);
+  const float hatLevel=closedShare*level[k][3]+(1.f-closedShare)*level[k][4];
+  const float balanced=kickOut*level[k][0]+snareOut*level[k][1]
+      +clapOut*level[k][2]+hatOut*hatLevel+tomLow*level[k][5]
+      +tomHigh*level[k][6]+crashOut*level[k][7];
+  return std::clamp(balanced,-.93f,.93f);
  }
 };
 } // namespace meow

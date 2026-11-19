@@ -27,11 +27,12 @@ public:
   void changeProgramName(int,const juce::String&) override {}
   void getStateInformation(juce::MemoryBlock&) override;
   void setStateInformation(const void*,int) override;
-  static juce::StringArray grooveNames(), kitNames(), catNames();
+  static juce::StringArray grooveNames(), kitNames();
   static int rhythmBpm(int index);
   // MIDI Learn: 27 native parameters + 18 performance actions.
   static constexpr int MidiParameterCount=27;
-  static constexpr int MidiTargetCount=53;
+  static constexpr int MidiTargetCount=54;
+  static constexpr int FxTimeMidiTarget=53;
   static const char* midiTargetName(int index);
   int findMidiTarget(const juce::String& id) const;
   void beginMidiLearn(const juce::String& id, bool relative=false);
@@ -47,7 +48,11 @@ public:
   std::atomic<int> editorWidth{600},editorHeight{810};
   std::atomic<float> padX{.5f},padY{.5f},audioLevel{0.f};
   std::atomic<bool> padDown{false},play{false};
-  std::atomic<int> triggerCat{-1}, lastCat{-1}, currentStep{0};
+  std::atomic<int> currentStep{0};
+  // Keyboard notes trigger the native synth and animate the original X/Y surface.
+  std::atomic<int> midiVisualNote{-1};
+  std::atomic<bool> midiVisualActive{false};
+  std::atomic<float> midiVisualY{.52f};
   // Each pad uses an atomic hit counter: rapid WebView clicks are never
   // discarded merely because they arrive in the same audio block.
   std::array<std::atomic<unsigned>,8> drumPadRequests{};
@@ -55,7 +60,7 @@ public:
   // Display thread performs analysis; audio callback only stores samples.
   std::array<std::atomic<float>, 256> visualTap{};
   std::atomic<unsigned> visualWriteHead{0};
-  // Six internal synthesized feline voices: no external audio files.
+  // The original synthesizer retains its feline presets; obsolete cat-effect voices are removed.
 private:
   // Audio thread only touches atomics and fixed-size arrays (no allocation/GUI calls).
   // Mapping encoding: 1..2048 for CC channel+number, 4097..6144 for note trigger;
@@ -65,6 +70,9 @@ private:
   std::array<std::atomic<bool>,MidiParameterCount> midiRealtimeEnabled{};
   std::array<std::atomic<bool>,MidiParameterCount> midiUpdatePending{};
   std::array<std::atomic<bool>,MidiTargetCount> midiTriggerHigh{};
+  // Appended MIDI Learn target for delay time; previous target indices are stable.
+  std::atomic<float> midiFxTimeValue{290.f};
+  std::atomic<bool> midiFxTimeEnabled{false},midiFxTimeUpdatePending{false};
   std::atomic<int> learnTarget{-1};
   std::atomic<bool> learnRelative{false};
   std::atomic<unsigned> lastLearnedCode{0};
@@ -75,8 +83,6 @@ private:
   float parameterForAudio(const char* id) const;
   using Voice=meow::SynthVoice;
   std::array<Voice,24> voices{};
-  struct CatVoice { bool active=false; int kind=0; float age=0,phase=0,filter=0; };
-  std::array<CatVoice,12> catVoices{};
   std::array<bool,128> midiNotes{};          // ARP notes (physical or latched by HOLD)
   std::array<bool,128> physicalMidiNotes{};  // Actual physical key state, not latched
   std::array<bool,128> soundingInputNotes{}; // Direct audio voices started from MIDI
@@ -93,15 +99,13 @@ private:
   meow::DrumSynth drumEngine;
   uint32_t randState=0x8941725u;
   unsigned scopeDivider=0, scopeWrite=0;
-  float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;
+  float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;float delaySamplesSmoothed=0.f;
   int noteFromPad(float x,int key,int octave,int scale) const;
   void noteOn(int,float,float,int,float);
   void noteOff(int,int=-1);
   void fireDrums(int,int,juce::MidiBuffer&,int,bool);
   void strikeDrumPad(int,float,juce::MidiBuffer&,int,bool);
   void fireArp(juce::MidiBuffer&,int,int,float,bool);
-  void triggerCatVoice(int);
-  float renderCatVoices();
   float renderVoice(Voice&,int,float,float,float);
   float noise();
   static juce::AudioProcessorValueTreeState::ParameterLayout makeParameters();

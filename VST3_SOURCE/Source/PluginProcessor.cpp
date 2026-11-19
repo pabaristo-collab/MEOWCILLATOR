@@ -17,7 +17,6 @@ static const char* presetLabels[37]={
 static const char* rhythms[11]={"POST-PUNK","DARKWAVE","GOTH ROCK","INDUSTRIAL EBM","HARDCORE PUNK","POWERVIOLENCE","D-BEAT","COLDWAVE","DEATHROCK","SYNTH PUNK","CRUST PUNK"};
 static const int rhythmTempos[11]={132,118,138,126,182,220,172,110,148,160,190};
 static const char* kits[4]={"XEROX PUNK","COLD MACHINE","INDUSTRIAL METAL","DUSTY BOOM BAP"};
-static const char* feline[6]={"MEOW","PURR","YOWL","HISS","CHIRP","GROWL"};
 float pitchHz(int n){return 440.f*std::pow(2.f,(float(n)-69.f)/12.f);}
 static constexpr const char* midiIds[MeowcillatorProcessor::MidiTargetCount]={
  "osc","drums","bpm","glide","cutoff","resonance","fxmix","drive","feedback","gate",
@@ -26,7 +25,8 @@ static constexpr const char* midiIds[MeowcillatorProcessor::MidiTargetCount]={
  "preset","play","padX","padY","padDown",
  "cat0","cat1","cat2","cat3","cat4","cat5",
  "presetPrev","presetNext","groovePrev","grooveNext","kitPrev","kitNext","fxToggle",
- "drumPad0","drumPad1","drumPad2","drumPad3","drumPad4","drumPad5","drumPad6","drumPad7"
+ "drumPad0","drumPad1","drumPad2","drumPad3","drumPad4","drumPad5","drumPad6","drumPad7",
+ "fxTime" // New mapping appended: old MIDI assignments remain index-compatible.
 };
 // Raw units for native parameters. Choice and bool values are integral.
 static constexpr float minRaw[27]={0,0,40,0,150,0,0,0,0,.1f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -36,7 +36,6 @@ static constexpr float maxRaw[27]={1,1,220,1,10000,1,1,1,.85f,1,4,11,4,10,3,4,3,
 
 juce::StringArray MeowcillatorProcessor::grooveNames(){juce::StringArray a;for(auto s:rhythms)a.add(s);return a;}
 juce::StringArray MeowcillatorProcessor::kitNames(){juce::StringArray a;for(auto s:kits)a.add(s);return a;}
-juce::StringArray MeowcillatorProcessor::catNames(){juce::StringArray a;for(auto s:feline)a.add(s);return a;}
 int MeowcillatorProcessor::rhythmBpm(int i){return rhythmTempos[juce::jlimit(0,10,i)];}
 juce::AudioProcessorValueTreeState::ParameterLayout MeowcillatorProcessor::makeParameters(){
  std::vector<std::unique_ptr<juce::RangedAudioParameter>> p;
@@ -46,6 +45,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MeowcillatorProcessor::makeP
  f("osc","SYNTH VOL",0,1,.65f); f("drums","DRUM VOL",0,1,.6f); f("bpm","BPM",40,220,132,1.f);
  f("glide","GLIDE",0,1,0.f); f("cutoff","CUTOFF",150,10000,6000,1.f);f("resonance","RESONANCE",0,1,.35f);
  f("fxmix","FX MIX",0,1,.30f);f("drive","DRIVE",0,1,.35f);f("feedback","FEEDBACK",0,.85f,.35f);
+ f("fxTime","DELAY TIME (ms)",60.f,900.f,290.f,1.f);
  f("gate","ARP GATE",.10f,1.f,.60f);
  ch("scale","SCALE",{"MIN PENT","MAJOR","MINOR","BLUES","CHROMATIC"},0);
  ch("key","KEY",{"C","C#","D","D#","E","F","F#","G","G#","A","A#","B"},0);
@@ -58,12 +58,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout MeowcillatorProcessor::makeP
  ch("motion","PAD MOTION",{"LIQUID","PULSE","SPECTRUM","GLITCH"},0);
  f("motionPower","MOTION POWER",0,1,.74f);
  b("arp","ARP",false);b("hold","HOLD",false);b("drumsOn","DRUMS ON",true);
- b("midiSynth","SEND SYNTH MIDI CH1",true);b("midiDrums","SEND DRUM MIDI CH10",true);b("midiCats","SEND CAT MIDI CH16",true);
+ b("midiSynth","SEND SYNTH MIDI CH1",true);b("midiDrums","SEND DRUM MIDI CH10",true);
+ b("midiCats","LEGACY (UNUSED)",false); // Retained only for older project states.
  b("splitOut","SPLIT DRUMS TO OUTPUT 3-4",false);
  return {p.begin(),p.end()};
 }
 MeowcillatorProcessor::MeowcillatorProcessor()
- :AudioProcessor(BusesProperties().withOutput("SYNTH + CATS",juce::AudioChannelSet::stereo(),true)
+ :AudioProcessor(BusesProperties().withOutput("SYNTH",juce::AudioChannelSet::stereo(),true)
    .withOutput("DRUMS + PADS",juce::AudioChannelSet::stereo(),true)),apvts(*this,nullptr,"MEOWCILLATOR_STATE",makeParameters())
 {
  for(auto& e:midiMappings)e.store(0);
@@ -89,6 +90,7 @@ void MeowcillatorProcessor::forgetMidiMapping(const juce::String& id){
  const int t=findMidiTarget(id);
  if(t>=0){midiMappings[t].store(0);midiTriggerHigh[t].store(false);
   if(t<MidiParameterCount){midiRealtimeEnabled[t].store(false);midiUpdatePending[t].store(false);}
+  if(t==FxTimeMidiTarget){midiFxTimeEnabled.store(false);midiFxTimeUpdatePending.store(false);}
   midiMapRevision.fetch_add(1);
  }
 }
@@ -96,11 +98,13 @@ void MeowcillatorProcessor::clearMidiMappings(){
  learnTarget.store(-1);
  for(int i=0;i<MidiTargetCount;++i){midiMappings[i].store(0);
   if(i<MidiParameterCount){midiRealtimeEnabled[i].store(false);midiUpdatePending[i].store(false);}}
+ midiFxTimeEnabled.store(false);midiFxTimeUpdatePending.store(false);
  midiMapRevision.fetch_add(1);
 }
 void MeowcillatorProcessor::clearMidiOverride(const juce::String& id){
  const int t=findMidiTarget(id);
  if(t>=0 && t<MidiParameterCount){midiRealtimeEnabled[t].store(false);midiUpdatePending[t].store(false);}
+ if(t==FxTimeMidiTarget){midiFxTimeEnabled.store(false);midiFxTimeUpdatePending.store(false);}
 }
 juce::var MeowcillatorProcessor::midiMappingState() const{
  juce::DynamicObject::Ptr data=new juce::DynamicObject();
@@ -115,6 +119,7 @@ juce::var MeowcillatorProcessor::midiMappingState() const{
  return juce::var(data.get());
 }
 float MeowcillatorProcessor::parameterForAudio(const char* id) const{
+ if(std::strcmp(id,"fxTime")==0 && midiFxTimeEnabled.load(std::memory_order_relaxed))return midiFxTimeValue.load(std::memory_order_relaxed);
  for(int t=0;t<MidiParameterCount;++t)
   if(std::strcmp(midiIds[t],id)==0){
    if(midiRealtimeEnabled[t].load(std::memory_order_relaxed))return midiRealtimeValue[t].load(std::memory_order_relaxed);
@@ -125,6 +130,8 @@ float MeowcillatorProcessor::parameterForAudio(const char* id) const{
 }
 void MeowcillatorProcessor::timerCallback(){
  // Audio thread never notifies JUCE/REAPER or allocates memory.
+ if(midiFxTimeUpdatePending.exchange(false,std::memory_order_acq_rel))
+  if(auto* p=apvts.getParameter("fxTime"))p->setValueNotifyingHost(p->convertTo0to1(midiFxTimeValue.load(std::memory_order_acquire)));
  for(int t=0;t<MidiParameterCount;++t)
   if(midiUpdatePending[t].exchange(false,std::memory_order_acq_rel)){
    const float raw=midiRealtimeValue[t].load(std::memory_order_acquire);
@@ -134,6 +141,12 @@ void MeowcillatorProcessor::timerCallback(){
 }
 void MeowcillatorProcessor::applyMidiTarget(int t,float normalized,bool noteMessage){
  const float n=juce::jlimit(0.f,1.f,normalized);
+ if(t==FxTimeMidiTarget){
+  midiFxTimeValue.store(60.f+n*840.f,std::memory_order_relaxed);
+  midiFxTimeEnabled.store(true,std::memory_order_release);
+  midiFxTimeUpdatePending.store(true,std::memory_order_release);
+  return;
+ }
  if(t<MidiParameterCount){
   // Buttons: toggle on each rising edge, ignoring note-off/CC release.
   if(t>=21 && t<=26){
@@ -161,7 +174,7 @@ void MeowcillatorProcessor::applyMidiTarget(int t,float normalized,bool noteMess
  const bool high=noteMessage||n>.5f;
  if(high&&!midiTriggerHigh[t].load()){
   if(t==28)play.store(!play.load());
-  else if(t>=32&&t<=37)triggerCat.store(t-32);
+  // Former cat trigger indices 32-37 are reserved and intentionally inert.
   else if(t==38)program.store((program.load()+36)%37);
   else if(t==39)program.store((program.load()+1)%37);
   else if(t==40||t==41||t==42||t==43){
@@ -201,7 +214,7 @@ void MeowcillatorProcessor::handleMidiMapping(const juce::MidiMessage& msg){
  const int pending=learnTarget.load(std::memory_order_relaxed);
  if(pending>=0 && pending<MidiTargetCount){
   // Do not capture piano notes as mappings for continuous knobs.
-  if(cc||bend||(note&&pending>=27)){
+  if(cc||bend||(note&&pending>=27&&pending!=FxTimeMidiTarget)){
    midiMappings[pending].store(cc&&learnRelative.load()?code+12288:code,std::memory_order_release);
    learnTarget.store(-1,std::memory_order_release);
    midiMapRevision.fetch_add(1,std::memory_order_relaxed);
@@ -222,6 +235,10 @@ void MeowcillatorProcessor::handleMidiMapping(const juce::MidiMessage& msg){
     const float inc=(t>=10&&t<=19)?1.f: (maxRaw[t]-minRaw[t])/100.f;
     const float raw=juce::jlimit(minRaw[t],maxRaw[t],old+inc*direction);
     midiRealtimeValue[t].store(raw);midiRealtimeEnabled[t].store(true);midiUpdatePending[t].store(true);
+   }else if(t==FxTimeMidiTarget){
+    const float old=parameterForAudio("fxTime");
+    const float raw=juce::jlimit(60.f,900.f,old+15.f*direction);
+    midiFxTimeValue.store(raw);midiFxTimeEnabled.store(true);midiFxTimeUpdatePending.store(true);
    }else{
     midiTriggerHigh[t].store(false);
     applyMidiTarget(t,1.f,true);
@@ -231,11 +248,11 @@ void MeowcillatorProcessor::handleMidiMapping(const juce::MidiMessage& msg){
  }
 }
 
-void MeowcillatorProcessor::prepareToPlay(double sampleRate,int){sr=sampleRate;for(auto& v:voices)v={};for(auto& s:catVoices)s={};drumPhase=arpPhase=0;stepIndex=0;
+void MeowcillatorProcessor::prepareToPlay(double sampleRate,int){sr=sampleRate;for(auto& v:voices)v={};drumPhase=arpPhase=0;stepIndex=0;
  lastPadDown=lastHoldMode=lastArpMode=arpHadSource=false;heldMidiCount=0;lastPadNote=lastArpNote=lastDirectPadNote=lastPadMidiNote=lastArpMidiNote=-1;
  midiNotes.fill(false);physicalMidiNotes.fill(false);soundingInputNotes.fill(false);forwardedInputNotes.fill(false);
  arpGateSamples=0;arpStep=0;drumEngine.reset();for(auto& p:drumPadRequests)p.store(0);lastGroove=-1;lastPlay=false;lastPadCC=-1;
- juce::zeromem(delayL,sizeof(delayL));juce::zeromem(delayR,sizeof(delayR));delayIndex=0;scopeDivider=scopeWrite=0;visualWriteHead.store(0);for(auto& s:visualTap)s.store(0.f);}
+ juce::zeromem(delayL,sizeof(delayL));juce::zeromem(delayR,sizeof(delayR));delayIndex=0;delaySamplesSmoothed=float(sr)*.290f;scopeDivider=scopeWrite=0;visualWriteHead.store(0);for(auto& s:visualTap)s.store(0.f);}
 bool MeowcillatorProcessor::isBusesLayoutSupported(const BusesLayout& l) const{
  if(l.getMainOutputChannelSet()!=juce::AudioChannelSet::stereo())return false;
  // Allow the auxiliary bus to be disabled by hosts that expose only stereo.
@@ -326,45 +343,6 @@ void MeowcillatorProcessor::fireArp(juce::MidiBuffer& midi,int sample,int mode,f
  lastArpNote=chord[size_t(idx)];noteOn(lastArpNote,.84f,padY.load(),2,glide);
  if(send){midi.addEvent(juce::MidiMessage::noteOn(1,lastArpNote,(juce::uint8)108),sample);lastArpMidiNote=lastArpNote;}
 }
-// Cat sounds are internally synthesized and independent of the main synth voice.
-void MeowcillatorProcessor::triggerCatVoice(int i){
- if(i<0||i>5)return;
- CatVoice* slot=&catVoices[0];
- for(auto& c:catVoices)if(!c.active){slot=&c;break;}
- *slot={};slot->active=true;slot->kind=i;lastCat=i;
-}
-float MeowcillatorProcessor::renderCatVoices(){
- float sum=0;const float fs=float(sr);
- for(auto& c:catVoices){
-  if(!c.active)continue;
-  const float t=c.age;
-  const float duration[6]={.76f,1.55f,1.13f,.84f,.32f,.92f};
-  if(t>=duration[c.kind]){c.active=false;continue;}
-  const float u=t/duration[c.kind],env=std::pow(juce::jmax(0.f,1.f-u),1.35f)*juce::jmin(1.f,t*80.f);
-  float hz=230.f,signal=0.f;
-  switch(c.kind){
-   case 0: hz=590.f-300.f*u+75.f*std::sin(twoPi*u*2.3f);break;          // MEOW
-   case 1: hz=64.f+3.f*std::sin(twoPi*t*23.f);break;                    // PURR
-   case 2: hz=760.f-460.f*u+90.f*std::sin(twoPi*t*4.f);break;          // YOWL
-   case 3: hz=950.f;break;                                              // HISS
-   case 4: hz=1200.f-470.f*u+140.f*std::sin(twoPi*u*3.f);break;        // CHIRP
-   case 5: hz=100.f-44.f*u+9.f*std::sin(twoPi*t*12.f);break;            // GROWL
-  }
-  c.phase+=hz/fs;c.phase-=std::floor(c.phase);
-  const float sine=std::sin(twoPi*c.phase);
-  const float saw=2.f*c.phase-1.f;
-  const float n=noise();
-  if(c.kind==0)signal=std::tanh(2.8f*(.72f*sine+.28f*saw))*(.75f+.25f*std::sin(twoPi*t*6.f));
-  else if(c.kind==1)signal=(.64f*sine+.36f*n)*(.60f+.4f*std::sin(twoPi*t*25.f));
-  else if(c.kind==2)signal=std::tanh((.65f*saw+.35f*sine)*4.f);
-  else if(c.kind==3){c.filter+=(n-c.filter)*.16f;signal=n-c.filter;}
-  else if(c.kind==4)signal=.65f*sine+.35f*saw;
-  else signal=std::tanh((saw*.72f+n*.28f)*4.5f);
-  sum+=signal*env*(c.kind==3?.13f:c.kind==1?.17f:.23f);
-  c.age+=1.f/fs;
- }
- return juce::jlimit(-.8f,.8f,sum);
-}
 void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::MidiBuffer& midi){
  juce::ScopedNoDenormals noDenormals;buffer.clear();const int frames=buffer.getNumSamples();
  // JUCE maps both VST3 output buses into a single processBlock buffer.
@@ -377,7 +355,7 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
  auto v=[&](const char* id){return parameterForAudio(id);};
  int patch=program.load(),groove=juce::jlimit(0,10,int(v("groove"))),kit=int(v("kit")),key=int(v("key")),oct=int(v("octave"))-2,scale=int(v("scale"));
  bool drumsOn=v("drumsOn")>.5f,arp=v("arp")>.5f,hold=v("hold")>.5f;
- bool sendDrums=v("midiDrums")>.5f,sendSynth=v("midiSynth")>.5f,sendCats=v("midiCats")>.5f;
+ bool sendDrums=v("midiDrums")>.5f,sendSynth=v("midiSynth")>.5f;
  double bpm=v("bpm");float glide=v("glide"),oscVol=v("osc"),drumVol=v("drums"),cutoff=v("cutoff"),res=v("resonance"),gate=v("gate");
  const bool playing=play.load(std::memory_order_relaxed);
  const bool splitOut=v("splitOut")>.5f && drumBus.getNumChannels()==2;
@@ -386,6 +364,8 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
  lastPlay=playing;
  int rate=int(v("rate")),arpType=int(v("arpType")),fx=int(v("effect"));
  const float drive=v("drive"),fxmix=v("fxmix"),feedback=v("feedback");
+ const float fxTimeMs=juce::jlimit(60.f,900.f,v("fxTime"));
+ const float timeSmoothCoeff=juce::jlimit(.00001f,1.f,1.f/(float(sr)*.025f));
  juce::MidiBuffer input;input.swapWith(midi);juce::MidiBuffer output;auto it=input.begin(),end=input.end();
  // Active note bookkeeping is separate from the XY base note and from ARP.
  // This is essential: releasing HOLD must send balanced MIDI Note Offs even
@@ -422,6 +402,8 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
   }
   // A released XY pad is no longer a valid ARP source after HOLD turns off.
   if(!padDown.load(std::memory_order_relaxed))lastPadNote=-1;
+  int lastHeld=-1;for(int k=127;k>=0;--k)if(physicalMidiNotes[size_t(k)]){lastHeld=k;break;}
+  midiVisualNote.store(lastHeld);midiVisualActive.store(lastHeld>=0);
  }
  if(arpJustOn){
   // Transition DIRECT -> ARP: release direct voices and their MIDI output.
@@ -447,9 +429,7 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
   const auto hits=juce::jmin(8u,drumPadRequests[static_cast<size_t>(p)].exchange(0,std::memory_order_acq_rel));
   for(unsigned n=0;n<hits;++n)strikeDrumPad(p,.92f,output,0,sendDrums);
  }
- int catTrig=triggerCat.exchange(-1);
- if(catTrig>=0&&catTrig<6){triggerCatVoice(catTrig);if(sendCats){output.addEvent(juce::MidiMessage::noteOn(16,60+catTrig,(juce::uint8)112),0);output.addEvent(juce::MidiMessage::noteOff(16,60+catTrig),juce::jmin(1,frames-1));}}
- const float fs=float(sr);
+  const float fs=float(sr);
  // Drum kit synthesis is isolated in DrumSoundBank.h. This intentionally
  // does not affect the 11 original 32-step rhythms or MIDI note assignments.
  float maxRms=0;
@@ -463,12 +443,12 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
    if(msg.isController() && (msg.getControllerNumber()==120 || msg.getControllerNumber()==123)){
     for(int n=0;n<128;++n){physicalMidiNotes[size_t(n)]=false;midiNotes[size_t(n)]=false;endInput(n,i);}
     heldMidiCount=0;lastPadNote=-1;lastPadDown=false;
+    midiVisualNote.store(-1);midiVisualActive.store(false);
     endDirectPad(i);endArp(i);arpHadSource=false;
     if(sendSynth)output.addEvent(msg,i);
     ++it;continue;
    }
-   if(ch==16&&msg.isNoteOn()&&msg.getNoteNumber()>=60&&msg.getNoteNumber()<66){triggerCatVoice(msg.getNoteNumber()-60);}
-   else if(ch==10&&msg.isNoteOn()){
+   if(ch==10&&msg.isNoteOn()){
     static constexpr int notes[8]={36,38,39,42,46,45,50,49};
     for(int d=0;d<8;++d)if(msg.getNoteNumber()==notes[d]){
       // Incoming MIDI is already on REAPER's input; do not echo it back.
@@ -478,16 +458,22 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
    }
    else if(msg.isController() && ch==1 && msg.getControllerNumber()==74){
     midiExpressionY=juce::jlimit(0.f,1.f,float(msg.getControllerValue())/127.f);
+    midiVisualY.store(midiExpressionY,std::memory_order_relaxed);
     for(auto& voice:voices)if(voice.active&&voice.source==1)voice.y=midiExpressionY;
     if(sendSynth)output.addEvent(msg,i);
    }
-   else if(msg.isNoteOn()){
+   else if(msg.isNoteOn() && ch!=10){
     const int n=msg.getNoteNumber();physicalMidiNotes[size_t(n)]=true;
+    midiVisualNote.store(n,std::memory_order_relaxed);midiVisualActive.store(true,std::memory_order_release);
     if(!midiNotes[size_t(n)]){midiNotes[size_t(n)]=true;++heldMidiCount;}
     if(!arp)startInput(n,msg.getFloatVelocity(),i);
    }
-   else if(msg.isNoteOff()){
+   else if(msg.isNoteOff() && ch!=10){
     const int n=msg.getNoteNumber();physicalMidiNotes[size_t(n)]=false;
+    if(!hold && midiVisualNote.load(std::memory_order_relaxed)==n){
+     int stillHeld=-1;for(int k=127;k>=0;--k)if(physicalMidiNotes[size_t(k)]){stillHeld=k;break;}
+     midiVisualNote.store(stillHeld,std::memory_order_relaxed);midiVisualActive.store(stillHeld>=0,std::memory_order_release);
+    }
     if(!hold){if(midiNotes[size_t(n)]){midiNotes[size_t(n)]=false;--heldMidiCount;}endInput(n,i);}
    }
    ++it;
@@ -542,16 +528,21 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
   // Four actual drum sound engines: XEROX PUNK / COLD MACHINE /
   // INDUSTRIAL METAL / DUSTY BOOM BAP. Pattern timing remains untouched.
   const float drumsSample=drumEngine.render(kit,fs);
-  const float catsDry=renderCatVoices();
   // Routing is intentional: ONLY the played synthesizer (XY / incoming MIDI)
-  // enters FX. The drum machine and the six feline trigger pads remain dry.
+  // enters FX. The drum machine stays independent and dry.
   // Never mix drums into an FX buffer or a shared saturator/feedback path.
   const float drumsDry=drumVol*drumsSample;
   float synthLeft=synth, synthRight=synth;
   if(fx==1 || fx==4){ // TAPE DELAY / SPACE ECHO — synth-only stereo feedback
-   const int length=juce::jlimit(1,95999,int(sr*(fx==4?.09:.29)));
-   const int delayed=(delayIndex+96000-length)%96000;
-   const float tapLeft=delayL[delayed],tapRight=delayR[delayed];
+   const float goal=juce::jlimit(1.f,95998.f,float(sr)*(.001f*fxTimeMs));
+   delaySamplesSmoothed+=(goal-delaySamplesSmoothed)*timeSmoothCoeff;
+   float pos=float(delayIndex)+96000.f-delaySamplesSmoothed;
+   if(pos>=96000.f)pos-=96000.f;
+   const int idx0=int(pos);
+   const int idx1=(idx0+1)%96000;
+   const float frac=pos-float(idx0);
+   const float tapLeft=juce::jmap(frac,delayL[idx0],delayL[idx1]);
+   const float tapRight=juce::jmap(frac,delayR[idx0],delayR[idx1]);
    const float input=std::tanh(synth*(1.f+drive*2.f));
    delayL[delayIndex]=input+feedback*tapRight;
    delayR[delayIndex]=input+feedback*tapLeft;
@@ -569,13 +560,13 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
     const float distorted=std::tanh(synth*(1.f+drive*6.f));
     synthLeft=synthRight=juce::jmap(fxmix,synth,distorted);
    }
-   // fx==0: a genuine FX bypass; volume/cat/drums stay untouched.
+   // fx==0: a genuine FX bypass; drums stay untouched.
   }
   delayIndex=(delayIndex+1)%96000;
   // MIX (default): backward-compatible full audio in 1/2; aux muted.
-  // SPLIT: synth and dry cat FX in 1/2; dedicated drums/pads in 3/4.
-  const float mainL=juce::jlimit(-.98f,.98f,synthLeft+catsDry+(splitOut?0.f:drumsDry));
-  const float mainR=juce::jlimit(-.98f,.98f,synthRight+catsDry+(splitOut?0.f:drumsDry));
+  // SPLIT: synth in 1/2; dedicated drums/pads in 3/4.
+  const float mainL=juce::jlimit(-.98f,.98f,synthLeft+(splitOut?0.f:drumsDry));
+  const float mainR=juce::jlimit(-.98f,.98f,synthRight+(splitOut?0.f:drumsDry));
   synthBus.setSample(0,i,mainL);synthBus.setSample(1,i,mainR);
   if(drumBus.getNumChannels()==2){
    drumBus.setSample(0,i,splitOut?drumsDry:0.f);
@@ -603,8 +594,10 @@ void MeowcillatorProcessor::setStateInformation(const void* d,int n){
  editorHeight.store(juce::jlimit(560,1450,(int)tree.getProperty("ui_height",810)));
  apvts.replaceState(tree);
  for(int t=0;t<MidiTargetCount;++t){const int code=(int)tree.getProperty(juce::Identifier("midi_"+juce::String(midiIds[t])),0);
-   midiMappings[t].store(code>=0&&code<=16384?code:0);
-   if(t<MidiParameterCount){midiRealtimeEnabled[t].store(false);midiUpdatePending[t].store(false);}}
+   midiMappings[t].store((t>=32&&t<=37)?0:(code>=0&&code<=16384?code:0));
+   if(t<MidiParameterCount){midiRealtimeEnabled[t].store(false);midiUpdatePending[t].store(false);}
+  if(t==FxTimeMidiTarget){midiFxTimeEnabled.store(false);midiFxTimeUpdatePending.store(false);}}
+ midiFxTimeEnabled.store(false);midiFxTimeUpdatePending.store(false);
  learnTarget.store(-1);midiMapRevision.fetch_add(1);
 }
 juce::AudioProcessorEditor* MeowcillatorProcessor::createEditor(){return new MeowcillatorEditor(*this);}

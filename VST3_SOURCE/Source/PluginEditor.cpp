@@ -29,14 +29,18 @@ MeowcillatorEditor::MeowcillatorEditor(MeowcillatorProcessor& p)
     setResizable(true, true);
     // The original physical panel measures 1050 x 1261 CSS pixels. Lock the
     // host/editor bounds to that ratio: no large black gutters or clipped UI.
-    constexpr double panelAspect = 1050.0 / 1420.0;
-    setResizeLimits(466, 560, 1208, 1450);
+    constexpr double panelAspect = 20.0 / 18.0;
+    setResizeLimits(670, 603, 1500, 1350);
     if(auto* bounds = getConstrainer())
         bounds->setFixedAspectRatio(panelAspect);
-    const int desiredHeight = juce::jlimit(560, 1450, processor.editorHeight.load());
+    // Old projects may have a stored portrait size. Do not inherit an overly
+    // tall window when opening the new landscape edition.
+    int desiredHeight = juce::jlimit(603, 1350, processor.editorHeight.load());
+    if (processor.editorWidth.load() < processor.editorHeight.load())
+        desiredHeight = 792; // 880 x 792: fits laptop DAWs without scrolling.
     setSize(juce::roundToInt(desiredHeight * panelAspect), desiredHeight);
     browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
-    startTimerHz(25);
+    startTimerHz(20);
 }
 
 MeowcillatorEditor::~MeowcillatorEditor(){ stopTimer(); processor.padDown.store(false); }
@@ -63,8 +67,8 @@ void MeowcillatorEditor::nativeMessage(const juce::var& msg)
     if(type=="midiClearAll") { processor.clearMidiMappings(); sendState(); return; }
     if(type=="resize") {
         // Only the JUCE editor/host owns its window size; never resize via DOM.
-        constexpr double panelAspect = 1050.0 / 1420.0;
-        const int h=juce::jlimit(560,1450,(int)obj->getProperty("height"));
+        constexpr double panelAspect = 20.0 / 18.0;
+        const int h=juce::jlimit(603,1350,(int)obj->getProperty("height"));
         const int w=juce::roundToInt(h*panelAspect);
         processor.editorWidth.store(w);
         processor.editorHeight.store(h);
@@ -81,10 +85,6 @@ void MeowcillatorEditor::nativeMessage(const juce::var& msg)
     if(type=="drumPad") {
         const int index=(int)obj->getProperty("index");
         if(index>=0&&index<8)processor.drumPadRequests[static_cast<size_t>(index)].fetch_add(1,std::memory_order_release);
-        return;
-    }
-    if(type=="cat") {
-        processor.triggerCat.store(juce::jlimit(0,5,(int)obj->getProperty("index")));
         return;
     }
     if(type=="preset") {
@@ -110,7 +110,7 @@ void MeowcillatorEditor::sendState()
     juce::DynamicObject::Ptr data=new juce::DynamicObject();
     juce::DynamicObject::Ptr params=new juce::DynamicObject();
     const char* ids[]={"osc","drums","bpm","glide","cutoff","resonance","fxmix","drive","feedback",
-       "gate","scale","key","octave","groove","kit","effect","rate","arpType","color","motion","motionPower",
+       "gate","scale","key","octave","groove","kit","effect","fxTime","rate","arpType","color","motion","motionPower",
        "arp","hold","drumsOn","splitOut"};
     for(const auto* id:ids)
         if(const auto* p=processor.apvts.getRawParameterValue(id))params->setProperty(id,(double)p->load());
@@ -144,6 +144,9 @@ void MeowcillatorEditor::timerCallback()
     frame->setProperty("wave",juce::var(wave));
     frame->setProperty("fft",juce::var(spectrum));
     frame->setProperty("step",processor.currentStep.load());
+    frame->setProperty("midiNote",processor.midiVisualNote.load(std::memory_order_relaxed));
+    frame->setProperty("midiActive",processor.midiVisualActive.load(std::memory_order_relaxed));
+    frame->setProperty("midiY",processor.midiVisualY.load(std::memory_order_relaxed));
     browser.emitEventIfBrowserIsVisible("meowFrame",juce::var(frame.get()));
     const auto revision=processor.midiMapRevision.load(std::memory_order_relaxed);
     if(revision!=lastMidiRevision){lastMidiRevision=revision;sendState();}
