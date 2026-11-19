@@ -1,0 +1,38 @@
+name: Compilar MEOWCILLATOR VST3 - Windows x64
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'VST3_SOURCE/Source/**'
+      - 'VST3_SOURCE/Assets/**'
+      - 'VST3_SOURCE/CMakeLists.txt'
+      - '.github/workflows/build-vst3-windows.yml'
+jobs:
+  windows-vst3:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Descargar JUCE 8.0.15
+        shell: pwsh
+        run: git clone --depth 1 --branch 8.0.15 https://github.com/juce-framework/JUCE.git JUCE
+      - name: Configurar CMake
+        shell: pwsh
+        run: cmake -S VST3_SOURCE -B build -G "Visual Studio 17 2022" -A x64 -DJUCE_DIR="$env:GITHUB_WORKSPACE/JUCE"
+      - name: Compilar plugin VST3
+        shell: pwsh
+        run: cmake --build build --config Release --parallel 4 --target Meowcillator_VST3
+      - name: Verificar VST3
+        shell: pwsh
+        run: |
+          $vst = 'build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR.vst3'
+          if (-not (Test-Path $vst)) { throw "No se genero el VST3: $vst" }
+      - name: Guardar VST3 como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MEOWCILLATOR-096-Windows-VST3
+          path: build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR.vst3/
+          if-no-files-found: error
