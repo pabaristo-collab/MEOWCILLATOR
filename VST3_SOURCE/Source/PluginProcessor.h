@@ -3,6 +3,8 @@
 #include <array>
 #include <atomic>
 #include <memory>
+#include "SynthSoundBank.h"
+#include "DrumSoundBank.h"
 
 class MeowcillatorProcessor final : public juce::AudioProcessor, private juce::Timer {
 public:
@@ -29,7 +31,7 @@ public:
   static int rhythmBpm(int index);
   // MIDI Learn: 27 native parameters + 18 performance actions.
   static constexpr int MidiParameterCount=27;
-  static constexpr int MidiTargetCount=45;
+  static constexpr int MidiTargetCount=53;
   static const char* midiTargetName(int index);
   int findMidiTarget(const juce::String& id) const;
   void beginMidiLearn(const juce::String& id, bool relative=false);
@@ -42,10 +44,13 @@ public:
 
   juce::AudioProcessorValueTreeState apvts;
   std::atomic<int> program{0};
-  std::atomic<int> editorWidth{1000},editorHeight{780};
+  std::atomic<int> editorWidth{600},editorHeight{810};
   std::atomic<float> padX{.5f},padY{.5f},audioLevel{0.f};
   std::atomic<bool> padDown{false},play{false};
   std::atomic<int> triggerCat{-1}, lastCat{-1}, currentStep{0};
+  // Each pad uses an atomic hit counter: rapid WebView clicks are never
+  // discarded merely because they arrive in the same audio block.
+  std::array<std::atomic<unsigned>,8> drumPadRequests{};
   // Lightweight realtime-safe mono audio tap used ONLY by the GUI visualizer.
   // Display thread performs analysis; audio callback only stores samples.
   std::array<std::atomic<float>, 256> visualTap{};
@@ -68,7 +73,7 @@ private:
   bool mappedControlNote(const juce::MidiMessage& msg) const;
   void timerCallback() override; // host parameter notifications on message thread
   float parameterForAudio(const char* id) const;
-  struct Voice{bool active=false,release=false;int note=60,source=0;float phase=0,subphase=0,env=0,vel=0,y=.5f,filter=0,currentHz=440,targetHz=440;};
+  using Voice=meow::SynthVoice;
   std::array<Voice,24> voices{};
   struct CatVoice { bool active=false; int kind=0; float age=0,phase=0,filter=0; };
   std::array<CatVoice,12> catVoices{};
@@ -85,7 +90,7 @@ private:
   int lastPadNote=-1,lastDirectPadNote=-1,lastPadMidiNote=-1,lastArpNote=-1,lastArpMidiNote=-1;
   int arpStep=0,arpGateSamples=0,stepIndex=0;
   float prevHz=220.f,midiExpressionY=.52f;
-  float kickEnv=0,snareEnv=0,hatEnv=0,openHatEnv=0,kickSweep=0,kickPhase=0,snareNoiseLP=0,hatNoiseLP=0;
+  meow::DrumSynth drumEngine;
   uint32_t randState=0x8941725u;
   unsigned scopeDivider=0, scopeWrite=0;
   float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;
@@ -93,6 +98,7 @@ private:
   void noteOn(int,float,float,int,float);
   void noteOff(int,int=-1);
   void fireDrums(int,int,juce::MidiBuffer&,int,bool);
+  void strikeDrumPad(int,float,juce::MidiBuffer&,int,bool);
   void fireArp(juce::MidiBuffer&,int,int,float,bool);
   void triggerCatVoice(int);
   float renderCatVoices();

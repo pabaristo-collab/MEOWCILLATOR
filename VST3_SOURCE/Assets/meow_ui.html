@@ -215,6 +215,13 @@ body.meow-native-fit .oct button{font-size:12px!important}
 body.meow-native-fit .controls select{font-size:12px!important}
 body.meow-native-fit .status{white-space:nowrap!important}
 body.meow-native-fit .transport{margin:8px 0 0!important}
+/* 0.9.13 — browser viewport and hardware panel have matching proportions.
+   Place the grip inside the artwork and remove the external zoom badge. */
+body.meow-native-fit .shell .meow-resize-grip{
+ position:absolute;right:10px;bottom:9px;width:45px;height:45px;
+ background:linear-gradient(135deg,#242424,#050505);border-color:#777;
+}
+body.meow-native-fit .meow-fit-indicator{display:none!important}
 /* Native resize grip overlays only a corner of the HOST viewport,
    never the sound/ARP/cat-pad controls. */
 .meow-resize-grip{
@@ -232,6 +239,21 @@ body.meow-native-fit .transport{margin:8px 0 0!important}
  font:700 11px Arial,sans-serif;letter-spacing:.3px;background:#080808dd;color:#f3f3f3;
  padding:7px 11px;border:1px solid #666;border-radius:8px;pointer-events:none}
 
+
+/* VST3 DRUM PAD DECK. Native-only; stays within the panel silhouette. */
+.meow-pad-deck{display:none;margin:10px 0 2px;border-top:1px solid #ffffff35;padding-top:9px}
+.meow-native-fit .meow-pad-deck{display:block}
+.meow-pad-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.meow-pad-head strong{font-size:13px;letter-spacing:1px;color:#fff}
+.meow-pad-head small{font:10px monospace;color:#ccc}
+.meow-split-label{display:flex;align-items:center;gap:5px;font:11px monospace;color:#fff;cursor:pointer}
+.meow-split-label input{accent-color:#fff;cursor:pointer}
+.meow-pad-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.meow-drum-trigger{appearance:none;touch-action:manipulation;user-select:none;min-width:0;min-height:44px;border:1px solid #777;border-radius:7px;background:linear-gradient(#28282b,#08080b);color:#f6f6f6;cursor:pointer;font-weight:850;padding:6px 3px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px}
+.meow-drum-trigger span{font-size:10px;letter-spacing:.35px}
+.meow-drum-trigger small{font:10px monospace;color:#bbb}
+.meow-drum-trigger:active,.meow-drum-trigger.fired{background:#e6e6e6;color:#090909;transform:translateY(1px)}
+.meow-drum-trigger:active small,.meow-drum-trigger.fired small{color:#222}
 </style>
 <style id="meow-native-midi-learn-css">
 .meow-midi-menu{position:fixed;z-index:999999;display:none;background:#0b0b0b;color:#fff;border:1px solid #fff;border-radius:9px;padding:7px;width:245px;box-shadow:0 9px 25px #000d;max-height:45vh;overflow-y:auto;}
@@ -285,8 +307,22 @@ body.meow-native-fit .transport{margin:8px 0 0!important}
   </section>
  </div>
 </div>
-<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">BETA 0.9.11 · VST3 EDITION</div></div>
+<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">BETA 0.9.15 · VST3 EDITION</div></div>
  <div class="drumrow"><div><label>RHYTHM STYLE · 11</label><div class="stepselect"><button id="groovePrev" aria-label="Previous rhythm">‹</button><select id="grooveSelect" aria-label="Rhythm style"></select><button id="grooveNext" aria-label="Next rhythm">›</button></div></div><div><label>DRUM SOUND</label><div class="stepselect"><button id="drumPrev" aria-label="Previous drum sound">‹</button><select id="drumPack" aria-label="Drum sound"></select><button id="drumNext" aria-label="Next drum sound">›</button></div></div><div class="bpmwrap"><label>BPM · MASTER</label><input class="bpm-number" type="number" inputmode="numeric" id="bpmText" min="40" max="220" value="132" step="1" aria-label="Master BPM"><div hidden><button id="minus">−</button><button id="plus">+</button></div></div><div class="microdial"><label>DRUM LVL</label><input id="drumVol" type="range" min="0" max="100" value="60"></div><div class="playwrap"><label>TRANSPORT</label><button class="play" id="play">▶ PLAY</button></div></div>
+ <div class="meow-pad-deck" id="nativeDrumDeck" aria-label="Eight playable MIDI drum pads">
+  <div class="meow-pad-head"><strong>DRUM PADS · 8 VOICES</strong><small>CH 10 · TOUCH / MIDI LEARN</small>
+  <label class="meow-split-label"><input type="checkbox" id="meowSplitOut"> SPLIT AUDIO · OUT 3/4</label></div>
+  <div class="meow-pad-grid" id="nativeDrumGrid">
+   <button class="meow-drum-trigger" data-drum-pad="0" type="button"><span>KICK</span><small>36</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="1" type="button"><span>SNARE</span><small>38</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="2" type="button"><span>CLAP</span><small>39</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="3" type="button"><span>CLOSED HH</span><small>42</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="4" type="button"><span>OPEN HH</span><small>46</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="5" type="button"><span>LOW TOM</span><small>45</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="6" type="button"><span>HIGH TOM</span><small>50</small></button>
+   <button class="meow-drum-trigger" data-drum-pad="7" type="button"><span>CRASH</span><small>49</small></button>
+  </div>
+ </div>
  <div class="recordrow"><button id="wavRec" aria-pressed="false">● REC WAV</button><button id="wavStop">■ STOP REC</button><div class="readout" id="recTime">00:00</div><button id="export" disabled>↓ SAVE WAV</button><button id="wavReset">↺ NEW TAKE</button></div>
  <div class="recordrow" style="grid-template-columns:110px 1fr;margin-top:3px;border-top:0;padding-top:0"><button id="drumToggle" class="switch">DRUMS ON</button><div class="status" id="announce" role="status" aria-live="polite">SELECT RHYTHM → PLAY · TOUCH CAT TO SYNTH · REC WAV TO RECORD</div></div>
  <div class="mini" id="grooveDescription"></div>
@@ -622,6 +658,26 @@ for(const id of Object.keys(idMap)){
 
 // MIDI Learn: right-click any native parameter, rhythm, preset or trigger.
 // REAPER sends controller messages directly to the native processor, NOT via WebView.
+// Drum pads are independent of the sequencer's PLAY state.
+// Pointer-down sends a single hit immediately. Physical controller pads
+// are routed by the native DSP without passing through WebView2.
+const nativeGrid=ui('nativeDrumGrid');
+if(nativeGrid){
+ nativeGrid.querySelectorAll('[data-drum-pad]').forEach(button=>{
+  let last=0;
+  button.addEventListener('pointerdown',e=>{
+   if(e.button!==0)return;
+   e.preventDefault();
+   const now=performance.now();if(now-last<14)return;last=now;
+   emit('drumPad',{index:Number(button.dataset.drumPad)});
+   button.classList.add('fired');
+   if(window.meowEmitVisual)window.meowEmitVisual('drum',now/1000,.8);
+   setTimeout(()=>button.classList.remove('fired'),110);
+  },{passive:false});
+ });
+}
+const splitToggle=ui('meowSplitOut');
+if(splitToggle)splitToggle.addEventListener('change',()=>emit('parameter',{id:'splitOut',value:splitToggle.checked?1:0}));
 const midiLearnTargets={
  osc:'osc',drumVol:'drums',bpmText:'bpm',glide:'glide',cutoff:'cutoff',resonance:'resonance',
  fxmix:'fxmix',drive:'drive',feedback:'feedback',gate:'gate',key:'key',scale:'scale',
@@ -654,6 +710,7 @@ function startLearn(target,relative=false){
 }
 function forgetLearn(target){emit('midiForget',{target});delete midiMappings[target];statusMidi('UNMAPPED '+midiName(target))}
 function targetFromNode(node){
+ if(node.closest('[data-drum-pad]'))return 'drumPad'+node.closest('[data-drum-pad]').dataset.drumPad;
  if(node.closest('.cat-trigger')){
   const n=['meow','purr','yowl','hiss','chirp','growl'].indexOf(node.closest('.cat-trigger').dataset.cat);
   return n>=0?'cat'+n:null;
@@ -710,6 +767,7 @@ backend.addEventListener('meowState',state=>{
   midiLearning=state.midiLearning||'';
  }
  receiving=true;
+ if(splitToggle)splitToggle.checked=Number(state.parameters?.splitOut||0)>0;
  const inv=Object.fromEntries(Object.entries(idMap).map(([k,v])=>[v,k]));
  for(const [name,value] of Object.entries(state.parameters||{})){
    const id=inv[name],el=id&&ui(id);if(!el)continue;
@@ -991,7 +1049,7 @@ setTimeout(()=>emit('ready'),150);
   grip.setAttribute('aria-label', 'Redimensionar ventana de MEOWCILLATOR');
   grip.title = 'Arrastra para cambiar el tamaño · Doble clic para alternar tamaños';
   grip.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 26L26 7M16 26l10-10M25 24v-9m0 9h-9" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  document.body.appendChild(grip);
+  shell.appendChild(grip);
   const indicator = document.createElement('div');
   indicator.className = 'meow-fit-indicator';
   indicator.setAttribute('aria-hidden', 'true');
@@ -1020,8 +1078,15 @@ setTimeout(()=>emit('ready'),150);
   // testing follows transformed coordinates in Chromium/WebView2.
   let dragging = null;
   const emitSize=(width,height) => {
-    const w = Math.round(Math.max(700,Math.min(1700,width)));
-    const h = Math.round(Math.max(540,Math.min(1450,height)));
+    // Preserve the panel proportions. Horizontal/vertical drags both work.
+    const ratio = 1050 / 1420;
+    const baseW = dragging?.w ?? window.innerWidth;
+    const baseH = dragging?.h ?? window.innerHeight;
+    const dw = width - baseW;
+    const dh = height - baseH;
+    const desiredH = Math.abs(dw / ratio) > Math.abs(dh) ? (baseW + dw) / ratio : baseH + dh;
+    const h = Math.round(Math.max(560,Math.min(1450,desiredH)));
+    const w = Math.round(h * ratio);
     if (backend) backend.emitEvent('meow',{type:'resize',width:w,height:h});
     else {document.documentElement.dataset.resizePreview=`${w}x${h}`;}
   };
@@ -1045,7 +1110,7 @@ setTimeout(()=>emit('ready'),150);
   };
   grip.addEventListener('pointerup',end);
   grip.addEventListener('pointercancel',end);
-  const presetSizes=[[1000,780],[1200,950],[840,660]];
+  const presetSizes=[[675,810],[783,940],[600,720]];
   let presetIndex=0;
   grip.addEventListener('dblclick',()=>{presetIndex=(presetIndex+1)%presetSizes.length;emitSize(...presetSizes[presetIndex]);});
   window.meowFit = {fit,schedule,emitSize};
