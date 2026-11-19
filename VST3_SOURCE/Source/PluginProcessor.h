@@ -31,8 +31,9 @@ public:
   static int rhythmBpm(int index);
   // MIDI Learn: 27 native parameters + 18 performance actions.
   static constexpr int MidiParameterCount=27;
-  static constexpr int MidiTargetCount=54;
+  static constexpr int MidiTargetCount=55;
   static constexpr int FxTimeMidiTarget=53;
+  static constexpr int FxSpeedMidiTarget=54;
   static const char* midiTargetName(int index);
   int findMidiTarget(const juce::String& id) const;
   void beginMidiLearn(const juce::String& id, bool relative=false);
@@ -45,7 +46,7 @@ public:
 
   juce::AudioProcessorValueTreeState apvts;
   std::atomic<int> program{0};
-  std::atomic<int> editorWidth{600},editorHeight{810};
+  std::atomic<int> editorWidth{1200},editorHeight{750};
   std::atomic<float> padX{.5f},padY{.5f},audioLevel{0.f};
   std::atomic<bool> padDown{false},play{false};
   std::atomic<int> currentStep{0};
@@ -56,6 +57,10 @@ public:
   // Each pad uses an atomic hit counter: rapid WebView clicks are never
   // discarded merely because they arrive in the same audio block.
   std::array<std::atomic<unsigned>,8> drumPadRequests{};
+  // Audio-driven hit monitors: pattern, mouse and external MIDI use the same
+  // realtime counters. The WebView only reads them at GUI frame rate.
+  std::array<std::atomic<unsigned>,8> drumHitCounts{};
+  std::array<std::atomic<int>,8> drumHitVelocities{};
   // Lightweight realtime-safe mono audio tap used ONLY by the GUI visualizer.
   // Display thread performs analysis; audio callback only stores samples.
   std::array<std::atomic<float>, 256> visualTap{};
@@ -72,6 +77,8 @@ private:
   std::array<std::atomic<bool>,MidiTargetCount> midiTriggerHigh{};
   // Appended MIDI Learn target for delay time; previous target indices are stable.
   std::atomic<float> midiFxTimeValue{290.f};
+  std::atomic<float> midiFxSpeedValue{1.2f};
+  std::atomic<bool> midiFxSpeedEnabled{false},midiFxSpeedUpdatePending{false};
   std::atomic<bool> midiFxTimeEnabled{false},midiFxTimeUpdatePending{false};
   std::atomic<int> learnTarget{-1};
   std::atomic<bool> learnRelative{false};
@@ -99,12 +106,13 @@ private:
   meow::DrumSynth drumEngine;
   uint32_t randState=0x8941725u;
   unsigned scopeDivider=0, scopeWrite=0;
-  float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;float delaySamplesSmoothed=0.f;
+  float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;float delaySamplesSmoothed=0.f,fxLfoPhase=0.f;
   int noteFromPad(float x,int key,int octave,int scale) const;
   void noteOn(int,float,float,int,float);
   void noteOff(int,int=-1);
   void fireDrums(int,int,juce::MidiBuffer&,int,bool);
   void strikeDrumPad(int,float,juce::MidiBuffer&,int,bool);
+  void reportDrumHit(int pad,float velocity);
   void fireArp(juce::MidiBuffer&,int,int,float,bool);
   float renderVoice(Voice&,int,float,float,float);
   float noise();

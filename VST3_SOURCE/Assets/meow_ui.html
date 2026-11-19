@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>MEOWCILLATOR 0.9.9 VST3 — by pablo aristo</title>
+<title>MEOWCILLATOR 0.9.19 VST3 — by pablo aristo</title>
 <style>
 :root{--paper:#f8f8f6;--pink:#d88dbb;--pink2:#f0d4e4;--muted:#c9c3c8;--stroke:#77727a;--bg:#09090d;--radius:14px;--accent:#d88dbb;--accent-soft:#f0d4e4;--motion-scale:1}
 *{box-sizing:border-box}html{background:#08080a}body{margin:0;padding:18px 10px 30px;background:radial-gradient(ellipse at 50% 18%,#17171b 0,#0e0e11 55%,#040406 95%);color:var(--paper);font:14px/1.25 Arial,Helvetica,sans-serif}
@@ -264,7 +264,7 @@ body.meow-native-fit .meow-fit-indicator{display:none!important}
 .meow-midi-status.show{opacity:1;border-color:#fff}
 </style>
 <style id="meow-0916-landscape">
-/* MEOWCILLATOR 0.9.17 — curated 20:18 LANDSCAPE PANEL.
+/* MEOWCILLATOR 0.9.18 — curated 20:18 LANDSCAPE PANEL.
    Keeps the original WebView2 bridge, artwork, rhythm sequences, animation.
    Recomposition is made with grid layout rather than duplicating controls. */
 body.meow-native-fit .shell{
@@ -402,6 +402,233 @@ body.meow-native-fit .midi-key-indicator>span{display:block;background:#fff;heig
 #meowMidiCursor{display:none;position:absolute;width:18px;height:18px;z-index:5;pointer-events:none;transform:translate(-50%,-50%);background:#fff;border:2px solid #111;border-radius:50%;box-shadow:0 0 3px 2px #fff9,0 0 18px 8px #fff5}
 #meowMidiCursor.active{display:block}
 </style>
+<style id="meow-0918-wide-studio">
+
+/* MEOWCILLATOR 0.9.18 — WIDE STUDIO 16:10, native JUCE view only.
+   Preserve original cat/art, drum patterns, MIDI Learn, animation and audio DSP. */
+body.meow-native-fit .shell {
+ width:1584px!important;min-width:1584px!important;max-width:1584px!important;
+ padding:13px 23px 13px!important;
+}
+body.meow-native-fit .header {
+ grid-template-columns:188px minmax(0,1fr) 195px!important;
+ min-height:77px!important;padding:1px 16px 8px!important;gap:16px!important
+}
+body.meow-native-fit .brand-name {font-size:62px!important;letter-spacing:-1.2px!important}
+body.meow-native-fit .brand-by {font-size:18px!important;margin-top:3px!important}
+body.meow-native-fit .sticker{font-size:20px!important;line-height:1!important}
+body.meow-native-fit .motto span{width:180px!important;font-size:18px!important}
+body.meow-native-fit .toprow {
+ display:grid!important;grid-template-columns:385px minmax(0,1fr) 175px!important;
+ min-height:105px!important;gap:13px!important;margin:0 7px 13px!important
+}
+body.meow-native-fit .toprow .module{padding:13px 17px!important}
+body.meow-native-fit .toprow .screen{min-height:100px!important;padding:9px 17px!important}
+body.meow-native-fit .module-label{font-size:16px!important}
+body.meow-native-fit .toprow .stepselect select{font-size:18px!important;min-height:42px!important}
+body.meow-native-fit .screen-name{font-size:25px!important}
+body.meow-native-fit .screenline,body.meow-native-fit .screen-rhythm,body.meow-native-fit .screen-kit{font-size:15px!important}
+body.meow-native-fit .utility button{width:53px!important;height:53px!important}
+body.meow-native-fit .stage{
+ display:grid!important;
+ grid-template-columns:minmax(0,1.94fr) minmax(0,1fr) minmax(0,1fr)!important;
+ grid-template-areas:"xy sound filter" "xy arp fx" "mood midi midi"!important;
+ grid-template-rows:265px 267px 104px!important;
+ gap:12px!important;margin:0 7px 12px!important;
+ align-items:stretch!important;
+}
+body.meow-native-fit .stage>.column{display:contents!important}
+body.meow-native-fit .stage #pad{grid-area:xy!important;height:100%!important;aspect-ratio:auto!important;min-width:0!important;min-height:0!important}
+body.meow-native-fit .stage .left>.controls:first-child{grid-area:sound!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2){grid-area:arp!important}
+body.meow-native-fit .stage .right>.filter-controls{grid-area:filter!important}
+body.meow-native-fit .stage .right>.fx-controls{grid-area:fx!important}
+body.meow-native-fit .stage .mood{grid-area:mood!important}
+body.meow-native-fit .stage .right>.midi-keyboard-panel{grid-area:midi!important}
+body.meow-native-fit .stage .module.controls{
+ min-width:0!important;min-height:0!important;height:100%!important;
+ padding:13px 18px!important;overflow:hidden!important;
+}
+body.meow-native-fit .stage .taglabel{font-size:19px!important;line-height:1.05!important;padding:5px 10px!important}
+body.meow-native-fit .stage .sectionhead{min-height:34px!important;margin-bottom:6px!important}
+body.meow-native-fit .stage .dialgrid,
+body.meow-native-fit .stage .filterpair{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:6px 18px!important;align-items:start!important;
+}
+body.meow-native-fit .stage .controlbox{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ justify-content:flex-start!important;gap:4px!important;min-width:0!important;
+}
+body.meow-native-fit .stage .controlbox>label{
+ width:100%!important;text-align:center!important;order:1!important;
+ font-size:15px!important;line-height:1.12!important;letter-spacing:.1px!important;
+}
+body.meow-native-fit .stage .controlbox>output{
+ order:2!important;font-size:14px!important;line-height:1.15!important;
+}
+body.meow-native-fit .stage .dial,
+body.meow-native-fit .stage .filter-controls .dial,
+body.meow-native-fit .stage .left>.controls:first-child .dial,
+body.meow-native-fit .stage .left>.controls:nth-child(2) .dial,
+body.meow-native-fit .stage .rate-dial{
+ width:96px!important;height:96px!important;margin:3px auto 0!important;
+ flex:none!important;
+}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .ratewrap #rateDial{margin:3px auto 0!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) #rateLabel{margin:0!important}
+body.meow-native-fit .stage #rateOutput{min-height:18px!important;margin:0!important;font-size:14px!important}
+body.meow-native-fit .stage .fieldgrid{gap:12px!important;margin-top:8px!important}
+body.meow-native-fit .stage .field label,
+body.meow-native-fit .stage .arp-type label{font-size:14px!important}
+body.meow-native-fit .stage .field select,
+body.meow-native-fit .stage .arp-type select{
+ min-height:37px!important;padding:5px 9px!important;font-size:16px!important;
+}
+body.meow-native-fit .stage .oct button{min-height:31px!important;font-size:15px!important}
+body.meow-native-fit .stage .arp-type{margin-top:9px!important;align-items:end!important}
+body.meow-native-fit .stage .arp-type .switch{min-height:36px!important;font-size:14px!important}
+body.meow-native-fit .stage .left .mini{font-size:12px!important;margin-top:3px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow{
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ gap:6px!important;align-items:start!important;margin-top:9px!important;
+}
+body.meow-native-fit .stage .right>.fx-controls .fxrow>.controlbox{min-width:0!important;grid-column:auto!important;grid-row:auto!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow .dial{
+ width:69px!important;height:69px!important;margin:3px auto 0!important;
+}
+body.meow-native-fit .stage .right>.fx-controls .fxrow .controlbox>label{
+ font-size:12px!important;letter-spacing:0!important;white-space:nowrap!important;
+}
+body.meow-native-fit .stage .right>.fx-controls .fxrow .controlbox>output{font-size:12px!important}
+body.meow-native-fit .stage .fxselect{margin:3px 0 7px!important}
+body.meow-native-fit .stage .fxselect select{font-size:16px!important;min-height:34px!important}
+body.meow-native-fit .stage .mood{
+ display:grid!important;grid-template-columns:160px minmax(0,1fr)!important;
+ gap:8px 16px!important;align-items:center!important;padding:9px 14px!important;
+}
+body.meow-native-fit .stage .mood .sectionhead{grid-column:1!important;margin:0!important}
+body.meow-native-fit .stage .mood .fieldgrid{
+ grid-column:2!important;display:grid!important;
+ grid-template-columns:1.2fr 1.2fr 115px!important;
+ gap:12px!important;margin:0!important;align-items:center!important;
+}
+body.meow-native-fit .stage .mood .fieldgrid .dial{width:69px!important;height:69px!important}
+body.meow-native-fit .stage .mood .fieldgrid label{font-size:11px!important}
+body.meow-native-fit .stage .midi-keyboard-panel{
+ grid-column:auto!important;display:flex!important;flex-direction:column!important;
+ gap:6px!important;justify-content:center!important;padding:10px 17px!important;
+}
+body.meow-native-fit .stage .midi-keyboard-panel .sectionhead{margin:0!important}
+body.meow-native-fit .midi-key-display{font-size:16px!important;padding:6px!important}
+body.meow-native-fit .midi-key-caption{font-size:13px!important}
+body.meow-native-fit .transport{
+ margin:0 7px!important;padding:10px 14px!important;
+ min-height:214px!important;overflow:hidden!important;
+}
+body.meow-native-fit .transport h2{font-size:24px!important}
+body.meow-native-fit .transporthead{margin:0 0 4px!important}
+body.meow-native-fit .drumrow{gap:13px!important;margin-bottom:5px!important}
+body.meow-native-fit .drumrow label{font-size:14px!important}
+body.meow-native-fit .drumrow select{font-size:15px!important;min-height:35px!important}
+body.meow-native-fit .drumrow .bpm-number{font-size:19px!important}
+body.meow-native-fit .drumrow .play{font-size:18px!important;min-height:40px!important}
+body.meow-native-fit .drumrow .microdial .dial{width:62px!important;height:62px!important}
+body.meow-native-fit .meow-pad-deck{margin:4px 0!important;padding:6px 9px!important}
+body.meow-native-fit .meow-pad-head{margin:0 0 6px!important;font-size:13px!important}
+body.meow-native-fit .meow-pad-grid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:9px!important}
+body.meow-native-fit .meow-drum-trigger{min-height:55px!important;font-size:15px!important;padding:5px 3px!important}
+body.meow-native-fit .meow-drum-trigger small{font-size:12px!important}
+body.meow-native-fit .recordrow{display:grid!important;grid-template-columns:1fr!important;margin:5px 0 0!important;padding:0!important}
+body.meow-native-fit .recordrow .status{font-size:13px!important}
+body.meow-native-fit #grooveDescription{font-size:12px!important;margin:2px 0 0!important}
+body.meow-native-fit .meow-resize-grip{right:9px!important;bottom:9px!important}
+.meow-midi-status:not(.show){display:none!important}
+
+
+/* Density refinement: occupy the full 16:10 plugin viewport while keeping
+   every playable control. Labels remain 13-17px at 1:1 source scale. */
+body.meow-native-fit .header{min-height:75px!important;padding:1px 14px 3px!important}
+body.meow-native-fit .brand-name{font-size:52px!important}
+body.meow-native-fit .toprow{min-height:104px!important;margin-bottom:8px!important}
+body.meow-native-fit .toprow .module{padding:8px 14px!important}
+body.meow-native-fit .toprow .screen{min-height:88px!important;padding:6px 14px!important}
+body.meow-native-fit .toprow .screen-name{font-size:21px!important;margin:3px 0!important}
+body.meow-native-fit .toprow .screen-sub,body.meow-native-fit .toprow .screen-kit{font-size:12px!important}
+body.meow-native-fit .toprow .stepselect select{min-height:36px!important}
+body.meow-native-fit .stage{grid-template-rows:210px 205px 80px!important;gap:8px!important;margin-bottom:8px!important}
+body.meow-native-fit .stage .module.controls{padding:7px 12px!important}
+body.meow-native-fit .stage .taglabel{font-size:18px!important;padding:4px 8px!important;margin:0!important}
+body.meow-native-fit .stage .sectionhead{min-height:28px!important;margin-bottom:3px!important}
+/* SOUND: knob pair left; key, scale and octave right. */
+body.meow-native-fit .stage .left>.controls:first-child{
+ display:grid!important;grid-template-columns:1.12fr 1fr!important;
+ grid-template-rows:29px 105px 52px!important;column-gap:9px!important;row-gap:2px!important;
+ align-items:start!important;align-content:start!important;
+}
+body.meow-native-fit .stage .left>.controls:first-child>.taglabel{grid-column:1/-1;grid-row:1}
+body.meow-native-fit .stage .left>.controls:first-child>.dialgrid{grid-column:1;grid-row:2 / 4;margin:0!important;align-items:start}
+body.meow-native-fit .stage .left>.controls:first-child>.fieldgrid{
+ grid-column:2;grid-row:2;display:flex!important;flex-direction:column!important;
+ gap:3px!important;margin:0!important;min-width:0;
+}
+body.meow-native-fit .stage .left>.controls:first-child>.field{
+ grid-column:2;grid-row:3;margin:0!important;min-width:0;
+}
+body.meow-native-fit .stage .left>.controls:first-child>.field label{margin:0!important}
+body.meow-native-fit .stage .left>.controls:first-child .dialgrid{gap:3px!important}
+body.meow-native-fit .stage .left>.controls:first-child .dial{width:73px!important;height:73px!important;margin:2px auto 0!important}
+body.meow-native-fit .stage .left>.controls:first-child .fieldgrid label{font-size:11px!important;margin:0!important}
+body.meow-native-fit .stage .left>.controls:first-child .fieldgrid select{min-height:27px!important;font-size:13px!important;padding:3px!important}
+body.meow-native-fit .stage .left>.controls:first-child .oct{gap:2px!important}
+body.meow-native-fit .stage .left>.controls:first-child .oct button{min-height:25px!important;font-size:12px!important}
+/* ARP knobs arranged on same baseline with compact selection underneath. */
+body.meow-native-fit .stage .left>.controls:nth-child(2) .dial{width:78px!important;height:78px!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .ratewrap #rateDial{width:78px!important;height:78px!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .dialgrid{gap:3px!important;margin:0!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type{margin-top:3px!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .mini{display:none!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type select{min-height:29px!important;font-size:12px!important}
+body.meow-native-fit .stage .left>.controls:nth-child(2) .arp-type .switch{min-height:29px!important;font-size:12px!important}
+body.meow-native-fit .stage .filter-controls .dial{width:84px!important;height:84px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow{gap:2px!important;margin:3px 0 0!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow .dial{width:62px!important;height:62px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow .controlbox>label{font-size:11px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxselect{margin:0 0 2px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxselect select{font-size:13px!important;min-height:29px!important;padding:3px 7px!important}
+body.meow-native-fit .stage .mood{grid-template-columns:142px 1fr!important;padding:5px 10px!important}
+body.meow-native-fit .stage .mood .fieldgrid{grid-template-columns:1fr 1fr 100px!important}
+body.meow-native-fit .stage .mood .fieldgrid .dial{width:49px!important;height:49px!important}
+body.meow-native-fit .stage .mood .fieldgrid label{font-size:11px!important}
+body.meow-native-fit .stage .midi-keyboard-panel{padding:5px 13px!important;gap:3px!important}
+body.meow-native-fit .midi-key-display{padding:3px!important;font-size:15px!important}
+body.meow-native-fit .midi-key-caption{font-size:11px!important}
+body.meow-native-fit .transport{padding:6px 13px!important;min-height:0!important}
+body.meow-native-fit .transporthead{margin:0 0 2px!important}
+body.meow-native-fit .transport h2{font-size:21px!important}
+body.meow-native-fit .drumrow{margin:0 0 3px!important;gap:8px!important}
+body.meow-native-fit .drumrow label{font-size:12px!important;margin:1px 0 2px!important}
+body.meow-native-fit .drumrow select{font-size:13px!important;min-height:30px!important}
+body.meow-native-fit .drumrow .bpm-number{font-size:17px!important}
+body.meow-native-fit .drumrow .play{min-height:35px!important;font-size:17px!important}
+body.meow-native-fit .meow-pad-deck{padding:3px 7px!important;margin:2px 0!important}
+body.meow-native-fit .meow-pad-head{margin:0 0 3px!important}
+body.meow-native-fit .meow-drum-trigger{min-height:45px!important;font-size:14px!important;padding:3px!important}
+body.meow-native-fit .recordrow,body.meow-native-fit #grooveDescription{display:none!important}
+
+</style>
+<style id="meow-0919-groove-control">
+/* Audio-driven drum pad highlights, fast opacity decay, no interval polling. */
+.meow-drum-trigger{position:relative;isolation:isolate;--native-hit:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,calc(var(--native-hit)*.8)), 0 0 calc(var(--native-hit)*14px) rgba(255,255,255,calc(var(--native-hit)*.45))!important;
+ background-image:linear-gradient(rgba(255,255,255,calc(var(--native-hit)*.55)),rgba(255,255,255,calc(var(--native-hit)*.55)))!important;}
+.meow-drum-trigger[style*="--native-hit"]{filter:brightness(calc(1 + var(--native-hit)*.5));}
+/* Three aligned filter controls; four evenly-spaced effect controls. */
+body.meow-native-fit .stage .right>.filter-controls .filterpair{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important;align-items:start!important}
+body.meow-native-fit .stage .right>.filter-controls .filterpair .dial{width:69px!important;height:69px!important;margin:2px auto 0!important}
+body.meow-native-fit .stage .right>.filter-controls .filterpair .controlbox>label{font-size:13px!important;white-space:nowrap!important}
+body.meow-native-fit .stage .right>.filter-controls .filterpair .controlbox>output{font-size:13px!important}
+body.meow-native-fit .stage .right>.fx-controls .fxrow{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:4px!important}
+</style>
 </head>
 <body>
 <main class="shell" aria-label="MEOWCILLATOR synthesizer">
@@ -432,17 +659,17 @@ body.meow-native-fit .midi-key-indicator>span{display:block;background:#fff;heig
   <section class="module controls mood"><div class="sectionhead"><div class="taglabel">PAD / MOOD</div><span class="mini">STYLE + MOTION</span></div><div class="fieldgrid"><div class="field"><label for="themeSelect">UI COLOR</label><select id="themeSelect"><option value="mono" selected>BLACK CAT</option><option value="orange">ORANGE CAT</option><option value="blush">BLUSH</option><option value="ice">ICE</option><option value="acid">ACID</option></select></div><div class="field"><label for="motionStyle">MOTION STYLE</label><select id="motionStyle"><option value="liquid">LIQUID</option><option value="pulse">PULSE</option><option value="spectrum">SPECTRUM</option><option value="glitch">GLITCH</option></select></div><div class="field"><label for="padMotion">MOTION POWER</label><input id="padMotion" type="range" min="0" max="100" value="74"></div></div><p class="mini">LIVE AUDIO: bass = waves · snare = hits · hats = details. Motion 0–100%</p></section>
  </div>
  <div class="column right">
-  <section class="module controls filter-controls"><div class="taglabel">FILTER</div><div class="dialgrid filterpair"><div class="controlbox"><label for="cutoff">CUTOFF</label><input id="cutoff" type="range" min="100" max="10000" value="6000"></div><div class="controlbox"><label for="resonance">RESO</label><input id="resonance" type="range" min="0" max="100" value="35"></div></div></section>
-  <section class="module controls fx-controls"><div class="sectionhead"><div class="taglabel">FX</div><button class="switch" id="fxSwitch">FX OFF</button></div><div class="fxselect"><select id="effect" aria-label="Effect type"><option value="off">FX OFF</option><option value="delay">TAPE DELAY</option><option value="crush">BIT CRUSH</option><option value="sat">SATURATOR</option><option value="reverb">SPACE / ECHO</option></select></div><div class="fxrow"><div class="controlbox"><label for="fxmix">MIX</label><input id="fxmix" type="range" min="0" max="100" value="30"></div><div class="controlbox"><label for="drive">DRIVE</label><input id="drive" type="range" min="0" max="100" value="35"></div><div class="controlbox"><label for="fxTime">TIME</label><input id="fxTime" type="range" min="60" max="900" step="1" value="290"></div><div class="controlbox"><label for="feedback">FEEDBACK</label><input id="feedback" type="range" min="0" max="85" value="35"></div></div></section>
+  <section class="module controls filter-controls"><div class="taglabel">FILTER</div><div class="dialgrid filterpair"><div class="controlbox"><label for="cutoff">CUTOFF</label><input id="cutoff" type="range" min="100" max="10000" value="6000"></div><div class="controlbox"><label for="resonance">RESO</label><input id="resonance" type="range" min="0" max="100" value="35"></div><div class="controlbox"><label for="drive">DIST</label><input id="drive" type="range" min="0" max="100" value="0"></div></div></section>
+  <section class="module controls fx-controls"><div class="sectionhead"><div class="taglabel">FX</div><button class="switch" id="fxSwitch">FX OFF</button></div><div class="fxselect"><select id="effect" aria-label="Effect type"><option value="off">FX OFF</option><option value="delay">TAPE DELAY</option><option value="crush">BIT CRUSH</option><option value="sat">SATURATOR</option><option value="reverb">SPACE / ECHO</option></select></div><div class="fxrow"><div class="controlbox"><label for="fxmix">MIX</label><input id="fxmix" type="range" min="0" max="100" value="30"></div><div class="controlbox"><label for="fxSpeed">SPEED</label><input id="fxSpeed" type="range" min="0.1" max="10" step="0.1" value="1.2"></div><div class="controlbox"><label for="fxTime">TIME</label><input id="fxTime" type="range" min="60" max="900" step="1" value="290"></div><div class="controlbox"><label for="feedback">FEEDBACK</label><input id="feedback" type="range" min="0" max="85" value="35"></div></div></section>
   <section class="module controls midi-keyboard-panel" aria-label="Native MIDI keyboard control">
 <div class="sectionhead"><div class="taglabel">MIDI / XY</div><span class="mini">NATIVE INPUT</span></div>
 <div class="midi-key-display" id="meowMidiNoteStatus" aria-live="off">KEYBOARD READY · CH 1</div>
-<div class="midi-key-caption">KEYS C2–C6 → XY PITCH · GATE<br>CC74 → Y · RIGHT CLICK XY → LEARN</div>
+<div class="midi-key-caption">KEYS C2–C6 → XY PITCH · GATE<br>CC74 → Y · MIDI LEARN AVAILABLE</div>
 <div class="midi-key-indicator" aria-hidden="true"><span id="meowMidiKeyLight"></span></div>
 </section>
  </div>
 </div>
-<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">BETA 0.9.17 · LANDSCAPE EDITION</div></div>
+<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">0.9.19 · GROOVE CONTROL</div></div>
  <div class="drumrow"><div><label>RHYTHM STYLE · 11</label><div class="stepselect"><button id="groovePrev" aria-label="Previous rhythm">‹</button><select id="grooveSelect" aria-label="Rhythm style"></select><button id="grooveNext" aria-label="Next rhythm">›</button></div></div><div><label>DRUM SOUND</label><div class="stepselect"><button id="drumPrev" aria-label="Previous drum sound">‹</button><select id="drumPack" aria-label="Drum sound"></select><button id="drumNext" aria-label="Next drum sound">›</button></div></div><div class="bpmwrap"><label>BPM · MASTER</label><input class="bpm-number" type="number" inputmode="numeric" id="bpmText" min="40" max="220" value="132" step="1" aria-label="Master BPM"><div hidden><button id="minus">−</button><button id="plus">+</button></div></div><div class="microdial"><label>DRUM LVL</label><input id="drumVol" type="range" min="0" max="100" value="60"></div><div class="playwrap"><label>TRANSPORT</label><button class="play" id="play">▶ PLAY</button></div></div>
  <div class="meow-pad-deck" id="nativeDrumDeck" aria-label="Eight playable MIDI drum pads">
   <div class="meow-pad-head"><strong>DRUM PADS · 8 VOICES</strong><small>CH 10 · TOUCH / MIDI LEARN</small>
@@ -459,7 +686,7 @@ body.meow-native-fit .midi-key-indicator>span{display:block;background:#fff;heig
   </div>
  </div>
  
- <div class="recordrow" style="grid-template-columns:110px 1fr;margin-top:3px;border-top:0;padding-top:0"><button id="drumToggle" class="switch">DRUMS ON</button><div class="status" id="announce" role="status" aria-live="polite">SELECT RHYTHM → PLAY · RECORD AUDIO / MIDI IN REAPER</div></div>
+ <div class="recordrow" style="grid-template-columns:1fr;margin-top:3px;border-top:0;padding-top:0"><div class="status" id="announce" role="status" aria-live="polite">SELECT RHYTHM → PLAY · RECORD MIDI IN REAPER</div></div>
  <div class="mini" id="grooveDescription"></div>
 </section>
 
@@ -546,7 +773,7 @@ function transportTick(){if(!transport||!ctx)return;
   const p=patterns[groove],s=step%32;
   const offbeat=(s%2===1)?(p.swing||0)*60/bpm/4:0;
   const at=nextStepTime+offbeat;
-  if(drumsEnabled){
+  if(true){
    const accent=(p.accent||[]).includes(s)?1.12:1;
    if(p.k.includes(s))drum('kick',at,accent);
    if(p.s.includes(s))drum('snare',at,accent);
@@ -559,7 +786,7 @@ function transportTick(){if(!transport||!ctx)return;
 function restartClock(){clearInterval(timer);timer=null;if(transport){nextStepTime=ctx.currentTime+.035;timer=setInterval(transportTick,25);transportTick()}}
 function setTransport(on){init();transport=on;clearInterval(timer);if(on){step=0;restartClock();$('play').textContent='■ STOP';announce('PLAYING · '+grooves[groove]+' · MASTER '+bpm+' BPM')}else{$('play').textContent='▶ PLAY';step=0;announce('STOPPED · WAV REC IS INDEPENDENT')}}
 $('play').onclick=()=>setTransport(!transport);
-$('drumToggle').onclick=()=>{drumsEnabled=!drumsEnabled;$('drumToggle').textContent=drumsEnabled?'DRUMS ON':'DRUMS OFF';$('drumToggle').classList.toggle('active',drumsEnabled)};
+
 // ARP is a note generator, not a decorative toggle. Plays while touch/MIDI notes are held.
 let arpOn=false,arpTimer=null,arpIndex=0,arpPad=null,arpMidi=new Map(),arpVoice=null;
 function arpSource(){if(arpMidi.size)return [...arpMidi.entries()].map(([note,velocity])=>({note,vel:velocity,y:.5})).sort((a,b)=>a.note-b.note);
@@ -628,7 +855,7 @@ if(!backend){return;} // The original browser standalone demo remains independen
 window.meowNativeMode=true;
 const emit=(type,extra={})=>backend.emitEvent('meow',Object.assign({type},extra));
 const ui=id=>document.getElementById(id);
-const idMap={osc:'osc',glide:'glide',cutoff:'cutoff',resonance:'resonance',fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',gate:'gate',padMotion:'motionPower',drumVol:'drums',bpmText:'bpm',key:'key',scale:'scale',rate:'rate',arptype:'arpType',grooveSelect:'groove',drumPack:'kit',effect:'effect',themeSelect:'color',motionStyle:'motion'};
+const idMap={osc:'osc',glide:'glide',cutoff:'cutoff',resonance:'resonance',fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',gate:'gate',padMotion:'motionPower',drumVol:'drums',bpmText:'bpm',key:'key',scale:'scale',rate:'rate',arptype:'arpType',grooveSelect:'groove',drumPack:'kit',effect:'effect',themeSelect:'color',motionStyle:'motion'};
 const indexMap={
  key:null,scale:['minor','major','natural','blues','chromatic'],
  rate:['4','2','1','.5'],
@@ -714,7 +941,7 @@ ui('midi').onclick=()=>announce('TO RECORD XY NOTES: ARM TRACK → RIGHT CLICK R
 // WAV capture removed in 0.9.17: use REAPER's render/record engine.
 ui('arp').addEventListener('click',()=>emit('parameter',{id:'arp',value:arpOn?1:0}));
 ui('hold').addEventListener('click',()=>emit('parameter',{id:'hold',value:held?1:0}));
-ui('drumToggle').addEventListener('click',()=>emit('parameter',{id:'drumsOn',value:drumsEnabled?1:0}));
+
 ui('preset').addEventListener('change',()=>emit('preset',{index:Number(ui('preset').value)}));
 document.querySelectorAll('#octs button').forEach((b,i)=>b.addEventListener('click',()=>emit('parameter',{id:'octave',value:i})));
 for(const id of Object.keys(idMap)){
@@ -753,17 +980,17 @@ document.querySelectorAll('.meow-drum-trigger').forEach(button=>{
 if(splitToggle)splitToggle.addEventListener('change',()=>emit('parameter',{id:'splitOut',value:splitToggle.checked?1:0}));
 const midiLearnTargets={
  osc:'osc',drumVol:'drums',bpmText:'bpm',glide:'glide',cutoff:'cutoff',resonance:'resonance',
- fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',gate:'gate',key:'key',scale:'scale',
+ fxmix:'fxmix',drive:'drive',feedback:'feedback',fxTime:'fxTime',fxSpeed:'fxSpeed',gate:'gate',key:'key',scale:'scale',
  grooveSelect:'groove',drumPack:'kit',effect:'effect',rate:'rate',rateDial:'rate',
  arptype:'arpType',themeSelect:'color',motionStyle:'motion',padMotion:'motionPower',
- arp:'arp',hold:'hold',drumToggle:'drumsOn',preset:'preset',play:'play',
+ arp:'arp',hold:'hold',preset:'preset',play:'play',
  presetPrev:'presetPrev',presetNext:'presetNext',groovePrev:'groovePrev',
  grooveNext:'grooveNext',drumPrev:'kitPrev',drumNext:'kitNext',fxSwitch:'fxToggle'
 };
 let midiMappings={},midiLearning='';
 const midiMenu=document.createElement('div');midiMenu.className='meow-midi-menu';
 const midiStatus=document.createElement('div');midiStatus.className='meow-midi-status';
-midiStatus.textContent='RIGHT-CLICK ANY CONTROL → MIDI LEARN';
+midiStatus.textContent='';
 document.body.append(midiMenu,midiStatus);
 function statusMidi(text){midiStatus.textContent=text;midiStatus.classList.add('show');}
 function midiName(target){return String(target).replace(/([a-z])([A-Z])/g,'$1 $2').toUpperCase()}
@@ -820,10 +1047,40 @@ ui('midi').onclick=()=>{
  ]);
 };
 // Native audio values keep the ORIGINAL waveform/visual engine reactive.
-window.meowNativeFrame=null;
-backend.addEventListener('meowFrame',frame=>{
+ window.meowNativeFrame=null;
+ const nativeHitSeen=Array(8).fill(0);
+ const nativeHitIntensity=new Float32Array(8);
+ const nativeHitTime=new Float64Array(8);
+ let nativeGlowRaf=0;
+ function flashNativeDrum(index,intensity){
+   nativeHitIntensity[index]=intensity;
+   nativeHitTime[index]=performance.now();
+   if(!nativeGlowRaf)nativeGlowRaf=requestAnimationFrame(paintNativeHits);
+ }
+ function paintNativeHits(now){
+   let any=false;
+   for(let i=0;i<8;i++){
+     const button=document.querySelector('[data-drum-pad="'+i+'"]');
+     if(!button)continue;
+     const age=now-nativeHitTime[i];
+     const glow=age>=0&&age<150?nativeHitIntensity[i]*Math.pow(1-age/150,1.6):0;
+     button.style.setProperty('--native-hit',glow.toFixed(3));
+     if(glow>0.003)any=true;
+   }
+   nativeGlowRaf=any?requestAnimationFrame(paintNativeHits):0;
+ }
+ backend.addEventListener('meowFrame',frame=>{
   window.meowNativeFrame=frame;
-  if(frame && Number.isFinite(frame.step))step=frame.step;
+   if(frame && Number.isFinite(frame.step))step=frame.step;
+   // Each count increases only when JUCE actually triggers that instrument.
+   const hits=frame?.drumHits,vel=frame?.drumVelocities;
+   if(Array.isArray(hits))hits.forEach((count,i)=>{
+     if(i<8 && Number(count)!==nativeHitSeen[i]){
+       nativeHitSeen[i]=Number(count);
+       const strength=Math.max(.35,Math.min(1,Number(vel?.[i]??100)/110));
+       flashNativeDrum(i,strength);
+     }
+   });
   const note=Number(frame?.midiNote??-1), active=Boolean(frame?.midiActive);
   const midiDot=ui('meowMidiCursor'),status=ui('meowMidiNoteStatus'),light=ui('meowMidiKeyLight');
   if(midiDot){
@@ -869,10 +1126,10 @@ backend.addEventListener('meowState',state=>{
  drumPack=Math.round(Number(state.parameters?.kit||0));
  held=Number(state.parameters?.hold||0)>0;
  arpOn=Number(state.parameters?.arp||0)>0;
- drumsEnabled=Number(state.parameters?.drumsOn||1)>0;
+ drumsEnabled=true;
  ui('hold').textContent='HOLD '+(held?'ON':'OFF');ui('hold').classList.toggle('active',held);
  ui('arp').textContent='ARP '+(arpOn?'ON':'OFF');ui('arp').classList.toggle('active',arpOn);
- ui('drumToggle').textContent='DRUMS '+(drumsEnabled?'ON':'OFF');ui('drumToggle').classList.toggle('active',drumsEnabled);
+ 
  ui('bpmText').value=bpm;
  applyMood();
  receiving=false;
@@ -931,7 +1188,7 @@ setTimeout(()=>emit('ready'),150);
   el('play').classList.toggle('active',transport);
   el('displayRec').classList.toggle('recording',mediaRecording);
  };
- ['preset','grooveSelect','bpmText','rate','arp','hold','midi','play','themeSelect','motionStyle','padMotion','drumPack','drumToggle'].forEach(id=>{const element=el(id);if(element){element.addEventListener('change',syncDisplay);element.addEventListener('click',()=>requestAnimationFrame(syncDisplay));element.addEventListener('input',()=>requestAnimationFrame(syncDisplay))}});window.addEventListener('meows:update-display',()=>requestAnimationFrame(syncDisplay));
+ ['preset','grooveSelect','bpmText','rate','arp','hold','midi','play','themeSelect','motionStyle','padMotion','drumPack'].forEach(id=>{const element=el(id);if(element){element.addEventListener('change',syncDisplay);element.addEventListener('click',()=>requestAnimationFrame(syncDisplay));element.addEventListener('input',()=>requestAnimationFrame(syncDisplay))}});window.addEventListener('meows:update-display',()=>requestAnimationFrame(syncDisplay));
  const help=el('help');el('helpButton').onclick=()=>help.classList.add('open');el('helpClose').onclick=()=>help.classList.remove('open');help.onclick=e=>{if(e.target===help)help.classList.remove('open')};document.addEventListener('keydown',e=>{if(e.key==='Escape')help.classList.remove('open')});
  // Instrument-grade audio-reactive X/Y visual engine (audio FFT + scheduled drum events).
  const canvas=el('waveCanvas'),pad=el('pad'),c=canvas.getContext('2d',{alpha:true});
@@ -1161,13 +1418,13 @@ setTimeout(()=>emit('ready'),150);
   let dragging = null;
   const emitSize=(width,height) => {
     // Preserve the panel proportions. Horizontal/vertical drags both work.
-    const ratio = 20 / 18;
+    const ratio = 16 / 10;
     const baseW = dragging?.w ?? window.innerWidth;
     const baseH = dragging?.h ?? window.innerHeight;
     const dw = width - baseW;
     const dh = height - baseH;
     const desiredH = Math.abs(dw / ratio) > Math.abs(dh) ? (baseW + dw) / ratio : baseH + dh;
-    const h = Math.round(Math.max(603,Math.min(1350,desiredH)));
+    const h = Math.round(Math.max(600,Math.min(1000,desiredH)));
     const w = Math.round(h * ratio);
     if (backend) backend.emitEvent('meow',{type:'resize',width:w,height:h});
     else {document.documentElement.dataset.resizePreview=`${w}x${h}`;}
@@ -1192,7 +1449,7 @@ setTimeout(()=>emit('ready'),150);
   };
   grip.addEventListener('pointerup',end);
   grip.addEventListener('pointercancel',end);
-  const presetSizes=[[880,792],[1000,900],[760,684]];
+  const presetSizes=[[1200,750],[1440,900],[960,600]];
   let presetIndex=0;
   grip.addEventListener('dblclick',()=>{presetIndex=(presetIndex+1)%presetSizes.length;emitSize(...presetSizes[presetIndex]);});
   window.meowFit = {fit,schedule,emitSize};
