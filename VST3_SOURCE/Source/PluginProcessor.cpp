@@ -32,7 +32,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MeowcillatorProcessor::makeP
  auto b=[&](const char* id,const char* name,bool def){p.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID{id,1},name,def));};
  auto ch=[&](const char* id,const char* name,juce::StringArray opts,int def){p.push_back(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID{id,1},name,opts,def));};
  f("osc","SYNTH VOL",0,1,.65f); f("drums","DRUM VOL",0,1,.6f); f("bpm","BPM",40,220,132,1.f);
- f("glide","GLIDE",0,1,.12f); f("cutoff","CUTOFF",150,10000,6000,1.f);f("resonance","RESONANCE",0,1,.35f);
+ f("glide","GLIDE",0,1,0.f); f("cutoff","CUTOFF",150,10000,6000,1.f);f("resonance","RESONANCE",0,1,.35f);
  f("fxmix","FX MIX",0,1,.30f);f("drive","DRIVE",0,1,.35f);f("feedback","FEEDBACK",0,.85f,.35f);
  f("gate","ARP GATE",.10f,1.f,.60f);
  ch("scale","SCALE",{"MIN PENT","MAJOR","MINOR","BLUES","CHROMATIC"},0);
@@ -53,7 +53,7 @@ MeowcillatorProcessor::MeowcillatorProcessor()
  :AudioProcessor(BusesProperties().withOutput("Output",juce::AudioChannelSet::stereo(),true)),apvts(*this,nullptr,"MEOWCILLATOR_STATE",makeParameters()){}
 void MeowcillatorProcessor::setCurrentProgram(int i){program=juce::jlimit(0,36,i);}
 const juce::String MeowcillatorProcessor::getProgramName(int i){return presetLabels[juce::jlimit(0,36,i)];}
-void MeowcillatorProcessor::prepareToPlay(double sampleRate,int){sr=sampleRate;for(auto& v:voices)v={};for(auto& s:catVoices)s={};drumPhase=arpPhase=0;stepIndex=0;lastPadDown=false;lastPadNote=lastArpNote=-1;kickEnv=snareEnv=hatEnv=0;juce::zeromem(delayL,sizeof(delayL));juce::zeromem(delayR,sizeof(delayR));delayIndex=0;}
+void MeowcillatorProcessor::prepareToPlay(double sampleRate,int){sr=sampleRate;for(auto& v:voices)v={};for(auto& s:catVoices)s={};drumPhase=arpPhase=0;stepIndex=0;lastPadDown=false;lastPadNote=lastArpNote=-1;kickEnv=snareEnv=hatEnv=0;juce::zeromem(delayL,sizeof(delayL));juce::zeromem(delayR,sizeof(delayR));delayIndex=0;scopeDivider=scopeWrite=0;visualWriteHead.store(0);for(auto& s:visualTap)s.store(0.f);}
 bool MeowcillatorProcessor::isBusesLayoutSupported(const BusesLayout& l) const{return l.getMainOutputChannelSet()==juce::AudioChannelSet::stereo();}
 float MeowcillatorProcessor::noise(){randState^=randState<<13;randState^=randState>>17;randState^=randState<<5;return float(randState&65535)/32768.f-1.f;}
 int MeowcillatorProcessor::noteFromPad(float x,int key,int octave,int scale) const {
@@ -64,7 +64,10 @@ int MeowcillatorProcessor::noteFromPad(float x,int key,int octave,int scale) con
 void MeowcillatorProcessor::noteOn(int note,float vel,float y,int source,float glide){
  Voice* slot=&voices[0];for(auto& v:voices)if(!v.active){slot=&v;break;}
  *slot={};slot->active=true;slot->source=source;slot->note=note;slot->vel=vel;slot->y=y;slot->targetHz=pitchHz(note);
- slot->currentHz=glide>.01f?prevHz:slot->targetHz;prevHz=slot->targetHz;
+ // First touch and MIDI note-ons start at pitch immediately. Only an
+ // intentional pad drag with GLIDE turned up interpolates from the last note.
+ const bool shouldSlide = (source == 0 && lastPadDown && glide > .015f);
+ slot->currentHz=shouldSlide?prevHz:slot->targetHz;prevHz=slot->targetHz;
 }
 void MeowcillatorProcessor::noteOff(int note,int source){for(auto& v:voices)if(v.active&&v.note==note&&(source<0||v.source==source))v.release=true;}
 float MeowcillatorProcessor::renderVoice(Voice& v,int patch,float cutoff,float resonance,float glide){
@@ -168,7 +171,9 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
    else if(msg.isNoteOff()){if(!hold)midiNotes[size_t(msg.getNoteNumber())]=false;if(!arp&&!hold)noteOff(msg.getNoteNumber(),1);}
    ++it;
   }
-  const bool down=padDown.load();const int padNote=noteFromPad(padX.load(),key,oct,scale);
+  const bool down=padDown.load(std::memory_order_relaxed);
+  // Don't perform pitch quantisation for every idle audio sample.
+  const int padNote=down?noteFromPad(padX.load(std::memory_order_relaxed),key,oct,scale):-1;
   if(down&&(!lastPadDown||padNote!=lastPadNote)){
     if(lastPadDown&&lastPadNote>=0){if(!arp)noteOff(lastPadNote,0);addSynth(juce::MidiMessage::noteOff(1,lastPadNote),i);}
     lastPadNote=padNote;if(!arp)noteOn(padNote,.91f,padY.load(),0,glide);
@@ -195,7 +200,9 @@ void MeowcillatorProcessor::processBlock(juce::AudioBuffer<float>& buffer,juce::
   float left=delayL[delayed],right=delayR[delayed];delayL[delayIndex]=v0+feedback*right;delayR[delayIndex]=v0+feedback*left;delayIndex=(delayIndex+1)%96000;
   float wet=(fx==0?0.f:fxmix*.5f*(left+right));float outL=std::tanh(v0+wet+cats),outR=std::tanh(v0+wet+cats);
   outL=juce::jlimit(-.98f,.98f,outL);outR=juce::jlimit(-.98f,.98f,outR);
-  buffer.setSample(0,i,outL);buffer.setSample(1,i,outR);maxRms=juce::jmax(maxRms,juce::jmax(std::abs(outL),std::abs(outR)));
+  buffer.setSample(0,i,outL);buffer.setSample(1,i,outR);
+  if(++scopeDivider >= 12){scopeDivider=0;visualTap[scopeWrite].store((outL+outR)*.5f,std::memory_order_relaxed);scopeWrite=(scopeWrite+1u)&255u;visualWriteHead.store(scopeWrite,std::memory_order_release);}
+  maxRms=juce::jmax(maxRms,juce::jmax(std::abs(outL),std::abs(outR)));
  }
  audioLevel=audioLevel.load()*.74f+maxRms*.26f;
  midi.swapWith(output);

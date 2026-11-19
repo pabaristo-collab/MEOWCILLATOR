@@ -32,6 +32,10 @@ public:
   std::atomic<float> padX{.5f},padY{.5f},audioLevel{0.f};
   std::atomic<bool> padDown{false},play{false};
   std::atomic<int> triggerCat{-1}, lastCat{-1}, currentStep{0};
+  // Lightweight realtime-safe mono audio tap used ONLY by the GUI visualizer.
+  // Display thread performs analysis; audio callback only stores samples.
+  std::array<std::atomic<float>, 256> visualTap{};
+  std::atomic<unsigned> visualWriteHead{0};
   // Six internal synthesized feline voices: no external audio files.
 private:
   struct Voice{bool active=false,release=false;int note=60,source=0;float phase=0,subphase=0,env=0,vel=0,y=.5f,filter=0,currentHz=440,targetHz=440;};
@@ -46,6 +50,7 @@ private:
   float prevHz=220.f;
   float kickEnv=0,snareEnv=0,hatEnv=0,kickPhase=0,snareFilter=0;
   uint32_t randState=0x8941725u;
+  unsigned scopeDivider=0, scopeWrite=0;
   float delayL[96000]{}, delayR[96000]{}; int delayIndex=0;
   int noteFromPad(float x,int key,int octave,int scale) const;
   void noteOn(int,float,float,int,float);
