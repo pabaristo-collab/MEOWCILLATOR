@@ -8,8 +8,8 @@
 namespace meow {
 struct DrumSynth {
  float kEnv=0,sEnv=0,hEnv=0,oEnv=0,kSweep=0;
- float clapEnv=0,lowTomEnv=0,highTomEnv=0,crashEnv=0;
- float lowTomPhase=0,highTomPhase=0,clapAge=0,crashLP=0;
+ float clapEnv=0;
+ float clapAge=0;
  float kPhase=0,kSubPhase=0,sPhase=0,metalPhase=0;
  float snareLP=0,hatLP=0,kToneLP=0,sAge=0;
  uint32_t seed=0x5831F1Cu;
@@ -20,12 +20,13 @@ struct DrumSynth {
  void hat(float accent){hEnv=accent;}
  void openHat(float accent){oEnv=accent;}
  void clap(float accent){clapEnv=accent;clapAge=0;}
- void lowTom(float accent){lowTomEnv=accent;lowTomPhase=0;}
- void highTom(float accent){highTomEnv=accent;highTomPhase=0;}
- void crash(float accent){crashEnv=accent;}
  // One stereo-independent mono sample; each kit has its own oscillator,
  // pitch envelope, noise spectrum, transient and release behaviour.
  float render(int kit,float sr){
+  // Skip oscillator/noise/FFT-size math for truly silent voices; essential
+  // when the drum sequencer is stopped and only the synth is being played.
+  if(kEnv<0.000005f && sEnv<0.000005f && hEnv<0.000005f &&
+     oEnv<0.000005f && clapEnv<0.000005f)return 0.f;
   const float fs=std::max(8000.f,sr),dt=1.f/fs;
   const int k=std::clamp(kit,0,3);
   const float n=noise();
@@ -81,19 +82,8 @@ struct DrumSynth {
   // these, so its established 11 rhythms remain byte-for-byte identical.
   const float clapBursts=(clapAge<.009f||(.019f<clapAge&&clapAge<.029f)||(.039f<clapAge&&clapAge<.052f))?1.f:.44f;
   const float clapOut=clapEnv*clapBursts*(k==1?.22f:k==2?.37f:k==3?.27f:.30f)*(k==3?snareLP:n-hatLP);
-  const float lowHz=(k==1?91.f:k==2?145.f:k==3?105.f:123.f);
-  const float highHz=(k==1?169.f:k==2?229.f:k==3?190.f:206.f);
-  lowTomPhase+=lowHz*dt;lowTomPhase-=std::floor(lowTomPhase);
-  highTomPhase+=highHz*dt;highTomPhase-=std::floor(highTomPhase);
-  const float tomLow=lowTomEnv*.38f*(std::sin(6.283185307f*lowTomPhase)+n*.08f);
-  const float tomHigh=highTomEnv*.33f*(std::sin(6.283185307f*highTomPhase)+n*.10f);
-  crashLP+=(n-crashLP)*(k==1?.36f:k==3?.14f:.29f);
-  const float crashOut=crashEnv*(n-crashLP)*(k==2?.27f:.19f);
   clapAge+=dt;
   clapEnv*=1.f-std::min(1.f,dt/(k==3?.20f:.12f));
-  lowTomEnv*=1.f-std::min(1.f,dt/(k==1?.36f:.22f));
-  highTomEnv*=1.f-std::min(1.f,dt/(k==1?.28f:.17f));
-  crashEnv*=1.f-std::min(1.f,dt/(k==1?.90f:k==3?.70f:.46f));
   // Distinct release curves for each bank; independent closed/open hats.
   kEnv*=1.f-std::min(1.f,dt/decayK[k]);
   sEnv*=1.f-std::min(1.f,dt/decayS[k]);
@@ -103,18 +93,17 @@ struct DrumSynth {
   // Independent per-instrument loudness trims. Calibrated from measured
   // single-hit 44.1 kHz RMS, with musical headroom for overlapping notes.
   // These values do not alter velocity/accent or any rhythm steps.
-  static constexpr float level[4][8]={
-    // kick, snare, clap, closed hat, open hat, low tom, high tom, crash
-    { .94f, 1.15f, 1.70f, 2.55f, 2.35f, .88f, .88f, 1.02f },
-    { .50f,  .94f, 3.97f, 1.86f, 2.20f,  .73f,  .72f,  .94f },
-    { .92f,  .75f, 1.80f, 1.32f, 1.43f,  .95f,  .96f,  .78f },
-    { .87f, 3.05f, 6.45f, 6.50f, 6.50f,  .97f,  .98f,  .86f }
+  static constexpr float level[4][5]={
+    // kick, snare, clap, closed hat, open hat
+    { .94f, 1.15f, 1.70f, 2.55f, 2.35f },
+    { .50f,  .94f, 3.97f, 1.86f, 2.20f },
+    { .92f,  .75f, 1.80f, 1.32f, 1.43f },
+    { .87f, 3.05f, 6.45f, 6.50f, 6.50f }
   };
   const float closedShare=hEnv/(hEnv+oEnv+1.e-7f);
   const float hatLevel=closedShare*level[k][3]+(1.f-closedShare)*level[k][4];
   const float balanced=kickOut*level[k][0]+snareOut*level[k][1]
-      +clapOut*level[k][2]+hatOut*hatLevel+tomLow*level[k][5]
-      +tomHigh*level[k][6]+crashOut*level[k][7];
+      +clapOut*level[k][2]+hatOut*hatLevel;
   return std::clamp(balanced,-.93f,.93f);
  }
 };

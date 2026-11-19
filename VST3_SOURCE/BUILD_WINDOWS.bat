@@ -4,7 +4,7 @@ cd /d "%~dp0"
 title MEOWCILLATOR VST3 - WINDOWS x64 BUILD
 
 echo -----------------------------------------------------
-echo   MEOWCILLATOR 0.9.6 - VST3 Windows 64-bit
+echo   MEOWCILLATOR 0.9.22 (NATIVE JUCE) - VST3 Windows 64-bit
 echo   by pablo aristo
 echo -----------------------------------------------------
 echo.
@@ -31,8 +31,13 @@ if errorlevel 1 (
  goto failed
 )
 echo.
-echo Compilando VST3 y Standalone [Release]...
-cmake --build build --config Release --parallel 4
+echo Compilando y ejecutando pruebas DSP...
+cmake --build build --config Release --parallel 4 --target MeowBankTests
+if errorlevel 1 goto failed
+ctest --test-dir build -C Release --output-on-failure
+if errorlevel 1 goto failed
+echo Compilando VST3 [Release]...
+cmake --build build --config Release --parallel 4 --target Meowcillator_VST3
 if errorlevel 1 goto failed
 if not exist "build\Meowcillator_artefacts\Release\VST3\MEOWCILLATOR.vst3" (
  echo [ERROR] No se encontro el VST3 en la ruta esperada.
