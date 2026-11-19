@@ -9,6 +9,7 @@ juce::WebBrowserComponent::Options MeowcillatorEditor::browserOptions()
     return Browser::Options{}
         .withBackend(Browser::Options::Backend::webview2)
         .withNativeIntegrationEnabled()
+        .withKeepPageLoadedWhenBrowserIsHidden()
         .withEventListener("meow", [this](juce::var msg) { nativeMessage(msg); })
         .withResourceProvider([](const juce::String& path) -> std::optional<Browser::Resource> {
             if (path != "/" && path != "/index.html") return std::nullopt;
@@ -26,8 +27,8 @@ MeowcillatorEditor::MeowcillatorEditor(MeowcillatorProcessor& p)
     setOpaque(true);
     addAndMakeVisible(browser);
     setResizable(true, true);
-    setResizeLimits(570, 620, 1700, 1800);
-    setSize(1100, 1160);
+    setResizeLimits(700, 540, 1700, 1450);
+    setSize(processor.editorWidth.load(), processor.editorHeight.load());
     browser.goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
     startTimerHz(25);
 }
@@ -45,6 +46,19 @@ void MeowcillatorEditor::nativeMessage(const juce::var& msg)
     auto* obj=msg.getDynamicObject(); if(obj==nullptr)return;
     const juce::String type=obj->getProperty("type").toString();
     if(type=="ready") { browserReady=true; sendState(); return; }
+    if(type=="midiLearn") { processor.beginMidiLearn(obj->getProperty("target").toString(),(bool)obj->getProperty("relative")); sendState(); return; }
+    if(type=="midiForget") { processor.forgetMidiMapping(obj->getProperty("target").toString()); sendState(); return; }
+    if(type=="midiClearAll") { processor.clearMidiMappings(); sendState(); return; }
+    if(type=="resize") {
+        // Only the JUCE editor/host owns its window size; never resize via DOM.
+        const int w=juce::jlimit(700,1700,(int)obj->getProperty("width"));
+        const int h=juce::jlimit(540,1450,(int)obj->getProperty("height"));
+        processor.editorWidth.store(w);
+        processor.editorHeight.store(h);
+        if(w!=getWidth() || h!=getHeight())setSize(w,h);
+        return;
+    }
+
     if(type=="pad") {
         processor.padX.store(juce::jlimit(0.0f,0.9999f,(float)(double)obj->getProperty("x")),std::memory_order_relaxed);
         processor.padY.store(juce::jlimit(0.0f,1.0f,(float)(double)obj->getProperty("y")),std::memory_order_relaxed);
@@ -67,6 +81,7 @@ void MeowcillatorEditor::nativeMessage(const juce::var& msg)
         const auto id=obj->getProperty("id").toString();
         if(auto* param=processor.apvts.getParameter(id)) {
             const float value=(float)(double)obj->getProperty("value");
+            processor.clearMidiOverride(id);
             param->setValueNotifyingHost(param->convertTo0to1(value));
         }
     }
@@ -83,6 +98,8 @@ void MeowcillatorEditor::sendState()
         if(const auto* p=processor.apvts.getRawParameterValue(id))params->setProperty(id,(double)p->load());
     data->setProperty("parameters",juce::var(params.get()));
     data->setProperty("preset",processor.getCurrentProgram());
+    data->setProperty("midiMappings",processor.midiMappingState());
+    data->setProperty("midiLearning",juce::String(MeowcillatorProcessor::midiTargetName(processor.pendingMidiLearn())));
     browser.emitEventIfBrowserIsVisible("meowState",juce::var(data.get()));
 }
 
@@ -110,5 +127,7 @@ void MeowcillatorEditor::timerCallback()
     frame->setProperty("fft",juce::var(spectrum));
     frame->setProperty("step",processor.currentStep.load());
     browser.emitEventIfBrowserIsVisible("meowFrame",juce::var(frame.get()));
-    if(++stateCounter%25==0)sendState();
+    const auto revision=processor.midiMapRevision.load(std::memory_order_relaxed);
+    if(revision!=lastMidiRevision){lastMidiRevision=revision;sendState();}
+    else if(++stateCounter%8==0)sendState();
 }

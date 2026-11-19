@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>MEOWCILLATOR 0.9.8 VST3 — by pablo aristo</title>
+<title>MEOWCILLATOR 0.9.9 VST3 — by pablo aristo</title>
 <style>
 :root{--paper:#f8f8f6;--pink:#d88dbb;--pink2:#f0d4e4;--muted:#c9c3c8;--stroke:#77727a;--bg:#09090d;--radius:14px;--accent:#d88dbb;--accent-soft:#f0d4e4;--motion-scale:1}
 *{box-sizing:border-box}html{background:#08080a}body{margin:0;padding:18px 10px 30px;background:radial-gradient(ellipse at 50% 18%,#17171b 0,#0e0e11 55%,#040406 95%);color:var(--paper);font:14px/1.25 Arial,Helvetica,sans-serif}
@@ -162,6 +162,84 @@ body{padding:10px 6px 18px}
 @media(max-width:900px){.header{gap:10px}.brand-name{font-size:clamp(31px,5vw,48px)}}
 @media(max-width:700px){.shell{width:calc(100vw - 10px)}body{padding:5px}.brand-name{font-size:clamp(27px,6vw,42px)}}
 
+
+/* === MEOWCILLATOR 0.9.9: native VST3 auto-fit + draggable corner === */
+html.meow-native-fit,html.meow-native-fit body{
+ width:100%!important;height:100%!important;margin:0!important;padding:0!important;
+ overflow:hidden!important;overscroll-behavior:none!important;
+}
+body.meow-native-fit .shell{
+ position:absolute!important;top:0!important;left:0!important;
+ width:1050px!important;max-width:none!important;min-width:1050px!important;
+ height:auto!important;padding:18px 20px 12px!important;margin:0!important;
+ transform-origin:top left!important;
+}
+/* Keep original 3-column hardware layout even in a small plugin window.
+   The whole surface is scaled instead of stacking columns and hiding controls. */
+body.meow-native-fit .header{
+ display:grid!important;grid-template-columns:188px minmax(0,1fr) 175px!important;
+ gap:10px!important;padding:4px 17px 12px!important;min-height:99px!important;
+}
+body.meow-native-fit .sticker{display:block!important;font-size:20px!important}
+body.meow-native-fit .brand-name{font-size:56px!important}
+body.meow-native-fit .brand-by{font-size:18px!important}
+body.meow-native-fit .motto{grid-column:auto!important;flex-direction:column!important;justify-content:initial!important;align-items:flex-end!important}
+body.meow-native-fit .motto span{width:175px!important;font-size:17px!important}
+body.meow-native-fit .toprow{grid-template-columns:277px minmax(0,1fr) 218px!important;margin:0 7px 10px!important}
+body.meow-native-fit .toprow .screen{grid-column:auto!important;grid-row:auto!important}
+body.meow-native-fit .utility{grid-column:auto!important}
+body.meow-native-fit .stage{grid-template-columns:245px minmax(0,1fr) 245px!important;margin:0 7px!important;gap:10px!important}
+body.meow-native-fit .stage .center{grid-column:auto!important;grid-row:auto!important}
+body.meow-native-fit .column{min-width:0!important}
+body.meow-native-fit .dial{width:84px!important;height:84px!important}
+body.meow-native-fit .dial .knob-marker{top:initial;height:23px!important;transform-origin:50% 28px!important}
+body.meow-native-fit .right .dial{width:75px!important;height:75px!important}
+body.meow-native-fit .pad{max-height:none!important;min-height:0!important}
+body.meow-native-fit .drumrow{grid-template-columns:1.4fr 1.25fr .64fr .45fr .76fr!important;gap:10px!important}
+body.meow-native-fit .drumrow>.playwrap{grid-column:auto!important;grid-row:auto!important}
+body.meow-native-fit .drumrow .bpmwrap,body.meow-native-fit .drumrow .microdial{grid-row:auto!important}
+body.meow-native-fit .recordrow{grid-template-columns:.9fr .72fr .7fr 1fr .93fr!important;gap:8px!important}
+body.meow-native-fit .recordrow>*{grid-column:auto!important;grid-row:auto!important}
+body.meow-native-fit .screw{display:block!important}
+body.meow-native-fit .gaffer-side{display:block!important}
+body.meow-native-fit .footer{font-size:16px!important}
+body.meow-native-fit .mood .fieldgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+body.meow-native-fit .mood .field:last-child{grid-column:auto!important}
+body.meow-native-fit .mood .dialcontrol{flex-direction:column!important}
+body.meow-native-fit .cat-sounds{min-height:0!important}
+body.meow-native-fit .cat-trigger{min-height:57px!important;font-size:10px!important}
+body.meow-native-fit .controls{padding:9px 12px!important}
+body.meow-native-fit .module{padding:11px 13px!important}
+body.meow-native-fit .taglabel{font-size:17px!important}
+body.meow-native-fit .oct button{font-size:12px!important}
+body.meow-native-fit .controls select{font-size:12px!important}
+body.meow-native-fit .status{white-space:nowrap!important}
+body.meow-native-fit .transport{margin:8px 0 0!important}
+/* Native resize grip overlays only a corner of the HOST viewport,
+   never the sound/ARP/cat-pad controls. */
+.meow-resize-grip{
+ position:fixed;right:8px;bottom:8px;width:48px;height:48px;
+ z-index:2147483000;cursor:nwse-resize;touch-action:none;user-select:none;
+ border:1px solid #aaa;border-radius:11px;
+ background:linear-gradient(135deg,#252525,#030303);
+ box-shadow:0 3px 16px #000d,inset 0 1px 0 #ffffff44;
+ display:grid;place-items:center;color:#fff;
+}
+.meow-resize-grip:hover,.meow-resize-grip.dragging{border-color:#fff;background:#272727}
+.meow-resize-grip svg{width:30px;height:30px;pointer-events:none}
+.meow-resize-grip:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.meow-fit-indicator{position:fixed;bottom:11px;right:66px;z-index:2147483000;
+ font:700 11px Arial,sans-serif;letter-spacing:.3px;background:#080808dd;color:#f3f3f3;
+ padding:7px 11px;border:1px solid #666;border-radius:8px;pointer-events:none}
+
+</style>
+<style id="meow-native-midi-learn-css">
+.meow-midi-menu{position:fixed;z-index:999999;display:none;background:#0b0b0b;color:#fff;border:1px solid #fff;border-radius:9px;padding:7px;width:245px;box-shadow:0 9px 25px #000d;max-height:45vh;overflow-y:auto;}
+.meow-midi-menu.show{display:flex;flex-direction:column;gap:4px}
+.meow-midi-menu button{background:#202020;color:#fff;text-align:left;font:11px/1.4 Arial,sans-serif;min-height:34px;border:1px solid #555;border-radius:4px;padding:8px;overflow-wrap:anywhere}
+.meow-midi-menu button:hover{background:#444;border-color:#fff}
+.meow-midi-status{position:fixed;z-index:999998;bottom:8px;left:8px;padding:5px 9px;background:#090909dd;color:#fff;border:1px solid #666;border-radius:5px;font:bold 10px/1.3 monospace;pointer-events:none;opacity:.55;max-width:70vw}
+.meow-midi-status.show{opacity:1;border-color:#fff}
 </style>
 </head>
 <body>
@@ -207,7 +285,7 @@ body{padding:10px 6px 18px}
   </section>
  </div>
 </div>
-<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">BETA 0.9.8 · VST3 EDITION</div></div>
+<section class="transport"><div class="transporthead"><h2><svg class="chain-symbol" aria-hidden="true" width="26" height="22" viewBox="0 0 40 32" fill="none"><g transform="rotate(-35 20 16)" stroke="currentColor" stroke-width="4" stroke-linejoin="round"><rect x="6" y="2" width="14" height="24" rx="7"/><rect x="20" y="6" width="14" height="24" rx="7"/></g></svg> DRUM MACHINE</h2><div class="version">BETA 0.9.11 · VST3 EDITION</div></div>
  <div class="drumrow"><div><label>RHYTHM STYLE · 11</label><div class="stepselect"><button id="groovePrev" aria-label="Previous rhythm">‹</button><select id="grooveSelect" aria-label="Rhythm style"></select><button id="grooveNext" aria-label="Next rhythm">›</button></div></div><div><label>DRUM SOUND</label><div class="stepselect"><button id="drumPrev" aria-label="Previous drum sound">‹</button><select id="drumPack" aria-label="Drum sound"></select><button id="drumNext" aria-label="Next drum sound">›</button></div></div><div class="bpmwrap"><label>BPM · MASTER</label><input class="bpm-number" type="number" inputmode="numeric" id="bpmText" min="40" max="220" value="132" step="1" aria-label="Master BPM"><div hidden><button id="minus">−</button><button id="plus">+</button></div></div><div class="microdial"><label>DRUM LVL</label><input id="drumVol" type="range" min="0" max="100" value="60"></div><div class="playwrap"><label>TRANSPORT</label><button class="play" id="play">▶ PLAY</button></div></div>
  <div class="recordrow"><button id="wavRec" aria-pressed="false">● REC WAV</button><button id="wavStop">■ STOP REC</button><div class="readout" id="recTime">00:00</div><button id="export" disabled>↓ SAVE WAV</button><button id="wavReset">↺ NEW TAKE</button></div>
  <div class="recordrow" style="grid-template-columns:110px 1fr;margin-top:3px;border-top:0;padding-top:0"><button id="drumToggle" class="switch">DRUMS ON</button><div class="status" id="announce" role="status" aria-live="polite">SELECT RHYTHM → PLAY · TOUCH CAT TO SYNTH · REC WAV TO RECORD</div></div>
@@ -479,6 +557,29 @@ window.stopPad=()=>{
 };
 ui('pad').onpointerup=()=>window.stopPad();
 ui('pad').onpointercancel=()=>window.stopPad();
+// Emit every RHYTHM change to JUCE, including the left/right arrow buttons.
+const oldSetGroove=window.setGroove;
+window.setGroove=(index)=>{
+ oldSetGroove(index);
+ emit('parameter',{id:'groove',value:groove});
+};
+// Do not flood WebView2's message queue with hundreds of drag events/sec.
+// Mouse-down and mouse-up still send immediately to the audio thread.
+let queuedPad=null, padFramePending=false;
+window.updatePad=(x,y)=>{
+ ui('cross').style.left=x*100+'%';
+ ui('cross').style.top=y*100+'%';
+ arpPad={x,y};
+ queuedPad={x,y};
+ if(padFramePending)return;
+ padFramePending=true;
+ requestAnimationFrame(()=>{
+   padFramePending=false;
+   if(!mouseDown || !queuedPad)return;
+   const next=queuedPad;queuedPad=null;
+   emit('pad',{down:true,x:next.x,y:1-next.y});
+ });
+};
 const oldChangeBpm=window.changeBpm;
 window.changeBpm=(n)=>{oldChangeBpm(n);emit('parameter',{id:'bpm',value:bpm});};
 window.setTransport=(on)=>{
@@ -502,7 +603,7 @@ window.catSound=(type)=>{
  window.dispatchEvent(new Event('meows:update-display'));
 };
 // The host itself handles MIDI and WAV rendering. No browser MIDI or PCM stream.
-ui('midi').onclick=()=>announce('MIDI INPUT · USE REAPER MIDI TRACK / KEYBOARD');
+ui('midi').onclick=()=>announce('TO RECORD XY NOTES: ARM TRACK → RIGHT CLICK REC → RECORD OUTPUT MIDI · SYNTH CH1 / DRUMS CH10 / CATS CH16');
 ui('wavRec').onclick=()=>announce('VST3: RECORD / RENDER MASTER AUDIO IN REAPER · FILE > RENDER');
 ui('wavStop').onclick=()=>announce('VST3: STOP RECORDING IN REAPER TRANSPORT');
 ui('export').disabled=false;
@@ -515,9 +616,83 @@ ui('preset').addEventListener('change',()=>emit('preset',{index:Number(ui('prese
 document.querySelectorAll('#octs button').forEach((b,i)=>b.addEventListener('click',()=>emit('parameter',{id:'octave',value:i})));
 for(const id of Object.keys(idMap)){
  const input=ui(id);if(!input)continue;
- input.addEventListener('input',()=>updateNative(id));
- input.addEventListener('change',()=>updateNative(id));
+ // Selects dispatch 'change' once; knobs dispatch 'input' while turning.
+ input.addEventListener(input.tagName==='SELECT'?'change':'input',()=>updateNative(id));
 }
+
+// MIDI Learn: right-click any native parameter, rhythm, preset or trigger.
+// REAPER sends controller messages directly to the native processor, NOT via WebView.
+const midiLearnTargets={
+ osc:'osc',drumVol:'drums',bpmText:'bpm',glide:'glide',cutoff:'cutoff',resonance:'resonance',
+ fxmix:'fxmix',drive:'drive',feedback:'feedback',gate:'gate',key:'key',scale:'scale',
+ grooveSelect:'groove',drumPack:'kit',effect:'effect',rate:'rate',rateDial:'rate',
+ arptype:'arpType',themeSelect:'color',motionStyle:'motion',padMotion:'motionPower',
+ arp:'arp',hold:'hold',drumToggle:'drumsOn',preset:'preset',play:'play',
+ presetPrev:'presetPrev',presetNext:'presetNext',groovePrev:'groovePrev',
+ grooveNext:'grooveNext',drumPrev:'kitPrev',drumNext:'kitNext',fxSwitch:'fxToggle'
+};
+let midiMappings={},midiLearning='';
+const midiMenu=document.createElement('div');midiMenu.className='meow-midi-menu';
+const midiStatus=document.createElement('div');midiStatus.className='meow-midi-status';
+midiStatus.textContent='RIGHT-CLICK ANY CONTROL → MIDI LEARN';
+document.body.append(midiMenu,midiStatus);
+function statusMidi(text){midiStatus.textContent=text;midiStatus.classList.add('show');}
+function midiName(target){return String(target).replace(/([a-z])([A-Z])/g,'$1 $2').toUpperCase()}
+function menuAt(x,y,items){
+ midiMenu.replaceChildren();
+ for(const it of items){
+  const b=document.createElement('button');b.type='button';b.textContent=it.text;
+  b.onclick=()=>{midiMenu.classList.remove('show');it.run()};midiMenu.append(b);
+ }
+ midiMenu.style.left=Math.min(x,innerWidth-245)+'px';
+ midiMenu.style.top=Math.min(y,innerHeight-160)+'px';
+ midiMenu.classList.add('show');
+}
+function startLearn(target,relative=false){
+ midiLearning=target;emit('midiLearn',{target,relative});
+ statusMidi('LEARN '+midiName(target)+' · MOVE A MIDI KNOB / PAD');
+}
+function forgetLearn(target){emit('midiForget',{target});delete midiMappings[target];statusMidi('UNMAPPED '+midiName(target))}
+function targetFromNode(node){
+ if(node.closest('.cat-trigger')){
+  const n=['meow','purr','yowl','hiss','chirp','growl'].indexOf(node.closest('.cat-trigger').dataset.cat);
+  return n>=0?'cat'+n:null;
+ }
+ if(node.closest('#octs'))return 'octave';
+ // Knobs are dynamically generated divs; their hidden input identifies the native parameter.
+ const knob=node.closest('.dialcontrol');
+ if(knob){const input=knob.querySelector('input[id]');if(input&&midiLearnTargets[input.id])return midiLearnTargets[input.id]}
+ let cur=node;
+ while(cur&&cur!==document.body){if(cur.id&&midiLearnTargets[cur.id])return midiLearnTargets[cur.id];cur=cur.parentElement}
+ return null;
+}
+document.addEventListener('contextmenu',e=>{
+ if(e.target.closest('.meow-midi-menu'))return;
+ if(e.target.closest('#pad')){
+  e.preventDefault();menuAt(e.clientX,e.clientY,[
+   {text:'LEARN X / PITCH',run:()=>startLearn('padX')},
+   {text:'LEARN Y / EXPRESSION',run:()=>startLearn('padY')},
+   {text:'LEARN TOUCH / GATE',run:()=>startLearn('padDown')}
+  ]);return;
+ }
+ const target=targetFromNode(e.target);if(!target)return;
+ e.preventDefault();
+ menuAt(e.clientX,e.clientY,[
+  {text:'MIDI LEARN · '+midiName(target),run:()=>startLearn(target)},
+  {text:'LEARN RELATIVE ENCODER',run:()=>startLearn(target,true)},
+  {text:'UNLEARN '+(midiMappings[target]||''),run:()=>forgetLearn(target)}
+ ]);
+});
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('.meow-midi-menu'))midiMenu.classList.remove('show')},true);
+// Dedicated MIDI button opens a compact mapping manager.
+ui('midi').onclick=()=>{
+ const rows=Object.entries(midiMappings);
+ menuAt(innerWidth/2-110,120,[
+  {text:rows.length?rows.map(([k,v])=>midiName(k)+': '+v).join('  ·  '):'NO MIDI MAPPINGS YET',run:()=>{}},
+  {text:'CLEAR ALL MIDI MAPPINGS',run:()=>{emit('midiClearAll');midiMappings={};statusMidi('ALL MIDI MAPPINGS CLEARED')}},
+  {text:'CLOSE',run:()=>{}}
+ ]);
+};
 // Native audio values keep the ORIGINAL waveform/visual engine reactive.
 window.meowNativeFrame=null;
 backend.addEventListener('meowFrame',frame=>{
@@ -526,6 +701,14 @@ backend.addEventListener('meowFrame',frame=>{
 });
 backend.addEventListener('meowState',state=>{
  if(!state)return;
+ midiMappings=state.midiMappings||{};
+ if(state.midiLearning!==undefined){
+  if(midiLearning && !state.midiLearning){
+   const label=midiMappings[midiLearning];
+   if(label)statusMidi(midiName(midiLearning)+' ← '+label);
+  }
+  midiLearning=state.midiLearning||'';
+ }
  receiving=true;
  const inv=Object.fromEntries(Object.entries(idMap).map(([k,v])=>[v,k]));
  for(const [name,value] of Object.entries(state.parameters||{})){
@@ -790,6 +973,86 @@ setTimeout(()=>emit('ready'),150);
 })();
 
 </script>
+
+<script>
+/* MEOWCILLATOR 0.9.9 - only active INSIDE JUCE/WebView2.
+   The web standalone keeps its existing responsive layout and audio. */
+(() => {
+  const backend = window.__JUCE__?.backend;
+  const preview = window.__MEOW_FIT_PREVIEW === true;
+  if (!backend && !preview) return;
+  const shell = document.querySelector('.shell');
+  if (!shell) return;
+  document.documentElement.classList.add('meow-native-fit');
+  document.body.classList.add('meow-native-fit');
+  const grip = document.createElement('button');
+  grip.type = 'button';
+  grip.className = 'meow-resize-grip';
+  grip.setAttribute('aria-label', 'Redimensionar ventana de MEOWCILLATOR');
+  grip.title = 'Arrastra para cambiar el tamaño · Doble clic para alternar tamaños';
+  grip.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 26L26 7M16 26l10-10M25 24v-9m0 9h-9" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(grip);
+  const indicator = document.createElement('div');
+  indicator.className = 'meow-fit-indicator';
+  indicator.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(indicator);
+  let raf = 0;
+  function fit() {
+    raf = 0;
+    const width = shell.offsetWidth;
+    const height = shell.offsetHeight;
+    if (!width || !height) return;
+    const viewWidth = window.innerWidth;
+    const viewHeight = window.innerHeight;
+    const margin = 12;
+    const scale = Math.min(1.15, (viewWidth-margin*2)/width, (viewHeight-margin*2)/height);
+    const s = Math.max(.15, scale);
+    const x = Math.round((viewWidth-width*s)/2);
+    const y = Math.round((viewHeight-height*s)/2);
+    shell.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+    indicator.textContent = `ZOOM ${Math.round(s*100)}%`;
+  }
+  const schedule = () => {if (!raf) raf = requestAnimationFrame(fit);};
+  window.addEventListener('resize',schedule,{passive:true});
+  document.fonts?.ready.then(schedule).catch(()=>{});
+  new ResizeObserver(schedule).observe(shell);
+  // Keep all original controls; the browser does not scroll and pointer hit
+  // testing follows transformed coordinates in Chromium/WebView2.
+  let dragging = null;
+  const emitSize=(width,height) => {
+    const w = Math.round(Math.max(700,Math.min(1700,width)));
+    const h = Math.round(Math.max(540,Math.min(1450,height)));
+    if (backend) backend.emitEvent('meow',{type:'resize',width:w,height:h});
+    else {document.documentElement.dataset.resizePreview=`${w}x${h}`;}
+  };
+  grip.addEventListener('pointerdown',e=>{
+    e.preventDefault();e.stopPropagation();
+    dragging={id:e.pointerId,x:e.screenX,y:e.screenY,w:window.innerWidth,h:window.innerHeight};
+    grip.classList.add('dragging');grip.setPointerCapture(e.pointerId);
+  });
+  let lastDrag=0;
+  grip.addEventListener('pointermove',e=>{
+    if(!dragging||e.pointerId!==dragging.id)return;
+    e.preventDefault();
+    const now=performance.now();if(now-lastDrag<28)return;lastDrag=now;
+    emitSize(dragging.w+e.screenX-dragging.x,dragging.h+e.screenY-dragging.y);
+  });
+  const end=e=>{
+    if(!dragging||e.pointerId!==dragging.id)return;
+    emitSize(dragging.w+e.screenX-dragging.x,dragging.h+e.screenY-dragging.y);
+    dragging=null;grip.classList.remove('dragging');
+    if(grip.hasPointerCapture(e.pointerId))grip.releasePointerCapture(e.pointerId);
+  };
+  grip.addEventListener('pointerup',end);
+  grip.addEventListener('pointercancel',end);
+  const presetSizes=[[1000,780],[1200,950],[840,660]];
+  let presetIndex=0;
+  grip.addEventListener('dblclick',()=>{presetIndex=(presetIndex+1)%presetSizes.length;emitSize(...presetSizes[presetIndex]);});
+  window.meowFit = {fit,schedule,emitSize};
+  schedule();
+})();
+</script>
+
 </body></html>
 
 <!-- MEOWCILLATOR 0.9.5: BLACK CAT default and internal synthesized cat pads -->

@@ -17,6 +17,7 @@ private:
     juce::dsp::FFT fft{8};
     std::array<float,512> fftBuffer{};
     bool browserReady=false;
+    unsigned lastMidiRevision=0;
     unsigned stateCounter=0;
     juce::WebBrowserComponent::Options browserOptions();
     void nativeMessage(const juce::var&);
