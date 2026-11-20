@@ -29,11 +29,11 @@ jobs:
       - name: Verificar VST3
         shell: pwsh
         run: |
-          $vst = 'build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR.vst3'
+          $vst = 'build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR RESTORED.vst3'
           if (-not (Test-Path $vst)) { throw "No se genero el VST3: $vst" }
       - name: Guardar VST3
         uses: actions/upload-artifact@v4
         with:
-          name: MEOWCILLATOR-098-Windows-VST3
-          path: build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR.vst3/
+          name: MEOWCILLATOR-0923-RESTORED-Windows-VST3
+          path: build/Meowcillator_artefacts/Release/VST3/MEOWCILLATOR RESTORED.vst3/
           if-no-files-found: error
